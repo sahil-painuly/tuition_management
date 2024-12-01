@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const months = [
     { name: "December", value: "12" },
     { name: "January", value: "01" },
-    { name: "Febuary", value: "02" },
+    { name: "February", value: "02" },
     { name: "March", value: "03" },
     { name: "April", value: "04" },
     { name: "May", value: "05" },
@@ -101,7 +101,7 @@ function loadStudentRecords(month) {
     tableBody.innerHTML = ""; // Clear existing rows
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
-        row.innerHTML = `
+        row.innerHTML = `  <!-- Populate student data -->
             <td>${student.name}</td>
             <td>${student.class}</td>
             <td>${new Date(student.nextFeeDate).toLocaleDateString()}</td>
