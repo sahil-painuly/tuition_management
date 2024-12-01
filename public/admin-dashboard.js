@@ -22,7 +22,7 @@ const passwordCheck = () => {
 document.addEventListener("DOMContentLoaded", () => {
     passwordCheck(); // Check password first
     fetchAdminData(); // Fetch admin data
-    loadStudentRecords("December");
+    
     // Populate months dropdown
     const monthSelect = document.getElementById("month-select");
     months.forEach((month) => {
@@ -91,28 +91,46 @@ function fetchAdminData() {
 
 // Load student records based on the selected month
 function loadStudentRecords(month) {
+    // Ensure the month is a string and pad to 2 digits if needed
+    const formattedMonth = String(month).padStart(2, "0");
+
     const filteredStudents = students.filter((student) => {
-        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month from date
-        return studentMonth === parseInt(month);
+        // Ensure nextFeeDate is a valid date before parsing
+        const studentDate = new Date(student.nextFeeDate);
+        
+        if (isNaN(studentDate)) {
+            console.error(`Invalid date for student ${student.name}: ${student.nextFeeDate}`);
+            return false; // Skip invalid date
+        }
+
+        const studentMonth = String(studentDate.getMonth() + 1).padStart(2, "0"); // Get the month (pad with leading zero)
+        return studentMonth === formattedMonth; // Compare the formatted month
     });
-    console.log(filteredStudents); // Log filtered students to check if they're correct
+
+    console.log(`Filtered students for month ${formattedMonth}:`, filteredStudents); // Log filtered students
 
     // Display filtered students in the table
     const tableBody = document.getElementById("student-records");
     tableBody.innerHTML = ""; // Clear existing rows
-    filteredStudents.forEach((student) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${student.name}</td>
-            <td>${student.studentClass}</td>
-            <td>${new Date(student.nextFeeDate).toLocaleDateString()}</td>
-            <td>${student.feeStatus}</td>
-            <td>₹${student.feeAmount}</td>
-        `;
-        tableBody.appendChild(row);
-    });
-}
 
+    if (filteredStudents.length === 0) {
+        const noDataRow = document.createElement("tr");
+        noDataRow.innerHTML = `<td colspan="5">No records found for the selected month.</td>`;
+        tableBody.appendChild(noDataRow);
+    } else {
+        filteredStudents.forEach((student) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${student.name}</td>
+                <td>${student.studentClass}</td>
+                <td>${new Date(student.nextFeeDate).toLocaleDateString()}</td>
+                <td>${student.feeStatus}</td>
+                <td>₹${student.feeAmount}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+}
 // Add new student form handler
 function addNewStudent() {
     const name = prompt("Enter student name:");
