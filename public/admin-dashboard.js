@@ -8,7 +8,7 @@ let stats = {
 
 // Password protection on page load
 const passwordCheck = () => {
-    const correctPassword = "admin123"; // 
+    const correctPassword = "admin123";
     const userInput = prompt("Enter the password to access this website:");
 
     if (userInput !== correctPassword) {
@@ -21,9 +21,7 @@ const passwordCheck = () => {
 // Run password check when the page loads
 document.addEventListener("DOMContentLoaded", () => {
     passwordCheck(); // Check password first
-
-    // Fetch admin stats and student data from the backend
-    fetchAdminData();
+    fetchAdminData(); // Fetch admin data
 
     // Populate months dropdown
     const monthSelect = document.getElementById("month-select");
@@ -71,6 +69,7 @@ function fetchAdminData() {
     fetch("http://localhost:5000/api/students")
         .then((response) => response.json())
         .then((data) => {
+            console.log(data); // Log the response to check data
             students = data;
             stats.totalStudents = students.length;
             stats.feesCollected = students
@@ -89,130 +88,58 @@ function fetchAdminData() {
         .catch((error) => console.error("Error fetching student data:", error));
 }
 
-// Function to format date into 'Day, Month Date, Year'
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
-    return date.toLocaleDateString("en-US", options);
-}
-
 // Load student records based on the selected month
 function loadStudentRecords(month) {
     const filteredStudents = students.filter((student) => {
-        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1;
+        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month from date
         return studentMonth === parseInt(month);
     });
+    console.log(filteredStudents); // Log filtered students to check if they're correct
 
-    stats.totalStudents = filteredStudents.length;
-    stats.feesCollected = filteredStudents
-        .filter((student) => student.feeStatus === "Paid")
-        .reduce((sum, student) => sum + student.feeAmount, 0);
-    stats.pendingFees = filteredStudents
-        .filter((student) => student.feeStatus === "Pending")
-        .reduce((sum, student) => sum + student.feeAmount, 0);
-
-    document.getElementById("total-students").textContent = stats.totalStudents;
-    document.getElementById("fees-collected").textContent = `₹${stats.feesCollected}`;
-    document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
-
-    const studentRecords = document.getElementById("student-records");
-    studentRecords.innerHTML = "";
-
+    // Display filtered students in the table
+    const tableBody = document.getElementById("student-records");
+    tableBody.innerHTML = ""; // Clear existing rows
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
-
-        const statusColor = student.feeStatus === "Paid" ? "green" : "red";
-        const rowColor = student.feeStatus === "Paid" ? "lightgreen" : "";
-
         row.innerHTML = `
             <td>${student.name}</td>
             <td>${student.class}</td>
-            <td>${formatDate(student.nextFeeDate)}</td>
-            <td class="status" style="color: ${statusColor}">
-                ${student.feeStatus}
-            </td>
-            <td class="fee-amount">₹${student.feeAmount}</td>
-            <td style="background-color: ${rowColor}">
-                <button class="toggle-status-btn" data-id="${student._id}">${student.feeStatus === "Pending" ? "Mark Paid" : "Mark Unpaid"}</button>
-                <button class="update-fee-btn" data-id="${student._id}">Update Fee</button>
-            </td>
+            <td>${new Date(student.nextFeeDate).toLocaleDateString()}</td>
+            <td>${student.feeStatus}</td>
+            <td>₹${student.feeAmount}</td>
         `;
-
-        studentRecords.appendChild(row);
-    });
-
-    document.querySelectorAll(".toggle-status-btn").forEach((button) => {
-        button.addEventListener("click", (e) => {
-            const studentId = e.target.getAttribute("data-id");
-            const feeStatus = e.target.textContent === "Mark Paid" ? "Paid" : "Pending";
-            toggleFeeStatus(studentId, feeStatus);
-        });
-    });
-
-    document.querySelectorAll(".update-fee-btn").forEach((button) => {
-        button.addEventListener("click", (e) => {
-            const studentId = e.target.getAttribute("data-id");
-            const newFee = prompt("Enter the new fee amount:");
-            if (newFee) updateStudentFee(studentId, parseInt(newFee));
-        });
+        tableBody.appendChild(row);
     });
 }
 
-function updateStudentFee(studentId, newFee) {
-    fetch("http://localhost:5000/api/update-fee", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: studentId, feeAmount: newFee }),
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success) {
-                alert("Fee updated successfully");
-                fetchAdminData();
-            } else {
-                alert("Failed to update fee");
-            }
-        })
-        .catch((error) => console.error("Error updating fee:", error));
-}
-
-function toggleFeeStatus(studentId, feeStatus) {
-    fetch("http://localhost:5000/api/update-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: studentId, feeStatus }),
-    })
-        .then((response) => response.json())
-        .then(() => fetchAdminData())
-        .catch((error) => console.error("Error updating fee status:", error));
-}
-
+// Add new student form handler
 function addNewStudent() {
     const name = prompt("Enter student name:");
     const studentClass = prompt("Enter student class:");
     const nextFeeDate = prompt("Enter next fee date (YYYY-MM-DD):");
-    const feeAmount = parseInt(prompt("Enter fee amount:"));
+    const feeAmount = parseFloat(prompt("Enter fee amount:"));
 
-    if (name && studentClass && nextFeeDate && !isNaN(feeAmount)) {
-        const newStudent = { name, studentClass, nextFeeDate, feeAmount };
-
+    if (name && studentClass && nextFeeDate && feeAmount) {
         fetch("http://localhost:5000/api/add-student", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newStudent),
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                name,
+                studentClass,
+                nextFeeDate,
+                feeAmount,
+            }),
         })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.success) {
-                    students.push(data.student);
-                    loadStudentRecords(document.getElementById("month-select").value);
-                    alert("New student added successfully!");
-                } else {
-                    alert("Failed to add new student");
-                }
-            })
-            .catch((error) => console.error("Error adding student:", error));
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            alert("New student added!");
+            fetchAdminData();  // Refresh the student data
+        })
+        .catch(error => console.error('Error adding student:', error));
     } else {
-        alert("Please provide valid student information.");
+        alert("Please fill all fields.");
     }
 }
