@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuition Management Dashboard</title>
+    <link rel="stylesheet" href="admin-dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="dashboard-header">
+            <h1>Welcome Sahil , This is Your Students Records </h1>
+        </header>
+
+        <main class="dashboard-content">
+            <section class="stats">
+                <div class="stat-card">
+                    <h3>Total Students</h3>
+                    <p id="total-students">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Fees Collected</h3>
+                    <p id="fees-collected">₹0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Fees</h3>
+                    <p id="pending-fees">₹0</p>
+                </div>
+            </section>
+
+            <section class="month-select">
+                <label for="month-select">Select Month:</label>
+                <select id="month-select">
+                    <!-- Options will be dynamically added here -->
+                </select>
+            </section>
+
+            <section class="student-list">
+                <h2>Student Records</h2>
+                <button id="add-new-student-btn">Add New Student</button>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Next Fee Date</th>
+                            <th>Status</th>
+                            <th>Fee Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-records">
+                        <!-- Data will be dynamically added here -->
+                    </tbody>
+                </table>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="admin-dashboard.js"></script>
+</body>
+</html>
