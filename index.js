@@ -2,25 +2,28 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const path = require('path'); // Required to serve static files
 const app = express();
 
 // Enable CORS and parse JSON
-app.use(cors());
-app.use(bodyParser.json());
+app.use(cors({
+    origin: 'http://localhost:3000', // Or your frontend URL
+    methods: 'GET,POST',
+    allowedHeaders: 'Content-Type',
+}));
 
-// Serve static files (like index.html)
-app.use(express.static(path.join(__dirname, 'public'))); // Serve from 'public' folder
+app.use(bodyParser.json());
 
 const str = 'mongodb+srv://shlpainuly:0TTJx8Z3jQXhNqxQ@tuition.4yy9m.mongodb.net/tuition_management?retryWrites=true&w=majority&appName=tuition';
 
 mongoose.connect(str)
   .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('Could not connect to MongoDB...', err));
+  .catch(err => {
+      console.error('Could not connect to MongoDB...', err);
+  });
 
-// Root route (now serves index.html)
+// Root route (added)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html')); // Serve the index.html file
+    res.send('Welcome to the Tuition Management System');
 });
 
 // Create Student Schema and Model
@@ -38,6 +41,7 @@ const Student = mongoose.model('Student', studentSchema);
 app.get('/api/students', async (req, res) => {
     try {
         const students = await Student.find(); // Fetch all students from DB
+        console.log('Fetched students:', students);  // Log data to check
         res.json(students);
     } catch (err) {
         console.error('Error retrieving students:', err);
