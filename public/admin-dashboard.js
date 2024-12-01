@@ -79,6 +79,7 @@ function fetchAdminData() {
                 .filter((student) => student.feeStatus === "Pending")
                 .reduce((sum, student) => sum + student.feeAmount, 0);
 
+            // Update the stats on the page
             document.getElementById("total-students").textContent = stats.totalStudents;
             document.getElementById("fees-collected").textContent = `₹${stats.feesCollected}`;
             document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
@@ -101,9 +102,9 @@ function loadStudentRecords(month) {
     tableBody.innerHTML = ""; // Clear existing rows
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
-        row.innerHTML = `  <!-- Populate student data -->
+        row.innerHTML = `
             <td>${student.name}</td>
-            <td>${student.class}</td>
+            <td>${student.studentClass}</td>
             <td>${new Date(student.nextFeeDate).toLocaleDateString()}</td>
             <td>${student.feeStatus}</td>
             <td>₹${student.feeAmount}</td>
@@ -120,7 +121,7 @@ function addNewStudent() {
     const feeAmount = parseFloat(prompt("Enter fee amount:"));
 
     if (name && studentClass && nextFeeDate && feeAmount) {
-        fetch("https://tuition-management.onrender.com/api/add-student", {  // Updated URL for adding student
+        fetch("https://tuition-management.onrender.com/api/add-student", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -136,7 +137,12 @@ function addNewStudent() {
         .then(data => {
             console.log(data);
             alert("New student added!");
-            fetchAdminData();  // Refresh the student data
+
+            // Add new student to the existing students array directly
+            students.push(data);
+            stats.totalStudents += 1; // Update total students count
+            // Re-render the student records for the current month
+            loadStudentRecords(currentMonth);
         })
         .catch(error => console.error('Error adding student:', error));
     } else {
