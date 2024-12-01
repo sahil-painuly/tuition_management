@@ -22,7 +22,7 @@ const passwordCheck = () => {
 document.addEventListener("DOMContentLoaded", () => {
     passwordCheck(); // Check password first
     fetchAdminData(); // Fetch admin data
-    loadStudentRecords(12);
+    loadStudentRecords("December");
     // Populate months dropdown
     const monthSelect = document.getElementById("month-select");
     months.forEach((month) => {
