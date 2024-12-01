@@ -89,46 +89,6 @@ app.post('/api/add-student', async (req, res) => {
     }
 });
 
-// Endpoint to update fee amount for a student
-app.post('/api/update-fee', async (req, res) => {
-    const { id, feeAmount } = req.body;
-    if (!id || !feeAmount) {
-        return res.status(400).json({ success: false, message: 'Student ID and fee amount are required' });
-    }
-
-    try {
-        const student = await Student.findById(id);
-        if (student) {
-            student.feeAmount = feeAmount;
-            await student.save(); // Save the updated student
-            res.json({ success: true, student });
-        } else {
-            res.status(404).json({ success: false, message: 'Student not found' });
-        }
-    } catch (err) {
-        console.error('Error updating fee amount:', err);
-        res.status(500).json({ success: false, message: 'Error updating fee amount' });
-    }
-});
-
-// Endpoint to remove a student
-app.post('/api/remove-student', async (req, res) => {
-    const { id } = req.body;
-    if (!id) {
-        return res.status(400).json({ success: false, message: 'Student ID is required' });
-    }
-    try {
-        const student = await Student.findByIdAndDelete(id); // Remove the student by ID
-        if (student) {
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ success: false, message: 'Student not found' });
-        }
-    } catch (err) {
-        console.error('Error removing student:', err);
-        res.status(500).json({ success: false, message: 'Error removing student' });
-    }
-});
 
 // Start the server
 const PORT = process.env.PORT || 5000;
