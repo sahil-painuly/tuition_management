@@ -8,18 +8,16 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-
 const str = 'mongodb+srv://shlpainuly:0TTJx8Z3jQXhNqxQ@tuition.4yy9m.mongodb.net/tuition_management?retryWrites=true&w=majority&appName=tuition';
 
 mongoose.connect(str)
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('Could not connect to MongoDB...', err));
 
-
-// // Connect to MongoDB
-// mongoose.connect('mongodb://localhost:27017/tuition_management')
-//     .then(() => console.log('Connected to MongoDB'))
-//     .catch((err) => console.log('Error connecting to MongoDB:', err));
+// Root route (added)
+app.get('/', (req, res) => {
+    res.send('Welcome to the Tuition Management System');
+});
 
 // Create Student Schema and Model
 const studentSchema = new mongoose.Schema({
@@ -127,12 +125,8 @@ app.post('/api/remove-student', async (req, res) => {
     }
 });
 
-
-
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-
-
