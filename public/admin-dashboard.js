@@ -66,7 +66,8 @@ const currentMonth = new Date().getMonth() + 1; // Get current month (1-based)
 
 // Fetch admin stats and students from the backend
 function fetchAdminData() {
-    fetch("https://tuition-management.onrender.com/api/students")
+    const str = 'mongodb+srv://shlpainuly:0TTJx8Z3jQXhNqxQ@tuition.4yy9m.mongodb.net/tuition_management?retryWrites=true&w=majority&appName=tuition';
+    fetch(str)
         .then((response) => response.json())
         .then((data) => {
             console.log(data); // Log the response to check data
