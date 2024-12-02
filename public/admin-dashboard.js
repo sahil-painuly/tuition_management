@@ -139,7 +139,7 @@ const addStudent = async () => {
 const markFeePaid = async (studentId) => {
     try {
         // Send the POST request to update the fee status
-        const response = await fetch("http://localhost:5000/api/update-status", {
+        const response = await fetch(`${API_BASE_URL}/update-status`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
