@@ -12,9 +12,10 @@ app.use(bodyParser.json());
 // MongoDB connection string
 const mongoURI = 'mongodb+srv://shlpainuly:0TTJx8Z3jQXhNqxQ@tuition.4yy9m.mongodb.net/tuition_management?retryWrites=true&w=majority&appName=tuition';
 
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongoURI)
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('Could not connect to MongoDB...', err));
+
 
 // Serve static files for frontend
 app.use(express.static(path.join(__dirname, 'public')));
