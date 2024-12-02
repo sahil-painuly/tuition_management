@@ -60,37 +60,35 @@ const updateStats = () => {
 // Render Students Table
 const renderStudents = (month) => {
     const tableBody = document.getElementById("student-records");
-    tableBody.innerHTML = "";
+    tableBody.innerHTML = ""; // Clear existing rows
 
     const filteredStudents = students.filter((student) => {
         const studentMonth = new Date(student.nextFeeDate).getMonth() + 1;
         return studentMonth === parseInt(month);
     });
 
-    if (filteredStudents.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6">No students found for this month</td></tr>`;
-        return;
-    }
-
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
+
         row.innerHTML = `
             <td>${student.name}</td>
-            <td>${student.studentClass || "N/A"}</td>
+            <td>${student.studentClass}</td>
             <td>${new Date(student.nextFeeDate).toLocaleDateString()}</td>
             <td>${student.feeStatus}</td>
             <td>₹${student.feeAmount}</td>
             <td>
                 ${
                     student.feeStatus === "Pending"
-                        ? `<button onclick="markFeePaid('${student._id}')">Mark Paid</button>`
-                        : "Paid"
+                        ? `<button class="btn btn-success" onclick="markFeePaid('${student._id}')">Mark Paid</button>`
+                        : "-"
                 }
             </td>
         `;
+
         tableBody.appendChild(row);
     });
 };
+
 
 // Add New Student
 const addStudent = async () => {
