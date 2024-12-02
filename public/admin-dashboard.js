@@ -62,7 +62,11 @@ const renderStudents = (month) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
-    const filteredStudents = students.filter(student => student.nextFeeDate.includes(month));
+    // Filter students whose 'nextFeeDate' month matches the selected month
+    const filteredStudents = students.filter(student => {
+        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
+        return studentMonth === parseInt(month); // Match the month
+    });
     
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
@@ -92,7 +96,7 @@ const renderStudents = (month) => {
             const markPaidBtn = document.createElement("button");
             markPaidBtn.textContent = "Mark Paid";
             markPaidBtn.classList.add("btn", "btn-success");
-            markPaidBtn.addEventListener("click", () => markFeePaid(student._id));
+            markPaidBtn.addEventListener("click", () => markFeePaid(student._id, student.feeStatus));
             actionCell.appendChild(markPaidBtn);
         }
         row.appendChild(actionCell);
@@ -100,7 +104,6 @@ const renderStudents = (month) => {
         studentRecords.appendChild(row);
     });
 };
-
 
 
 // Add New Student
