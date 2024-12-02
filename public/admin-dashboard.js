@@ -136,7 +136,10 @@ const addStudent = async () => {
 };
 
 // Mark Fee as Paid
-const markFeePaid = async (studentId) => {
+const markFeePaid = async (studentId, currentFeeStatus) => {
+    // Toggle the fee status
+    const newFeeStatus = currentFeeStatus === "Paid" ? "Pending" : "Paid";  // Switch between Paid and Pending
+
     try {
         // Send the POST request to update the fee status
         const response = await fetch(`${API_BASE_URL}/update-status`, {
@@ -146,7 +149,7 @@ const markFeePaid = async (studentId) => {
             },
             body: JSON.stringify({
                 id: studentId,   // student ID to update
-                feeStatus: "Paid", // Set the status to "Paid"
+                feeStatus: newFeeStatus, // Set the new toggled status
             }),
         });
 
@@ -155,7 +158,7 @@ const markFeePaid = async (studentId) => {
 
         // Check if the update was successful
         if (data.success) {
-            alert("Fee status updated successfully!");
+            alert(`Fee status updated to ${newFeeStatus} successfully!`);
             // Refresh the student data to reflect changes
             students = await fetchData("students");
             updateStats();
@@ -168,6 +171,7 @@ const markFeePaid = async (studentId) => {
         alert("Failed to update fee status. Please try again later.");
     }
 };
+
 
 
 // Populate Month Dropdown
