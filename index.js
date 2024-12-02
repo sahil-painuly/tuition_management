@@ -73,19 +73,27 @@ app.post('/api/add-student', async (req, res) => {
 // Update student fee status
 app.post('/api/update-status', async (req, res) => {
   const { id, feeStatus } = req.body;
+
+  // Validate inputs
   if (!id || !feeStatus) {
     return res.status(400).json({ success: false, message: 'Student ID and fee status are required' });
   }
 
   try {
-    const student = await Student.findById(id);
-    if (!student) {
+    // Use findOneAndUpdate to directly update the student's feeStatus
+    const updatedStudent = await Student.findOneAndUpdate(
+      { _id: id },  // Find student by ID
+      { feeStatus: feeStatus },  // Update feeStatus
+      { new: true }  // Return the updated document
+    );
+
+    // If student not found, return 404
+    if (!updatedStudent) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    student.feeStatus = feeStatus;
-    await student.save();
-    res.json({ success: true, student });
+    // Return success with the updated student
+    res.json({ success: true, student: updatedStudent });
   } catch (err) {
     console.error('Error updating fee status:', err);
     res.status(500).json({ success: false, message: 'Error updating fee status', error: err });
