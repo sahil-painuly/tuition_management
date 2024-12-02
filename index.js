@@ -5,93 +5,121 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const app = express();
 
-// Enable CORS and parse JSON
+// Enable CORS and JSON Parsing
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB connection string (use your own credentials)
-const str = 'mongodb+srv://shlpainuly:0TTJx8Z3jQXhNqxQ@tuition.4yy9m.mongodb.net/tuition_management?retryWrites=true&w=majority&appName=tuition';
+// MongoDB connection string
+const mongoURI = 'mongodb+srv://shlpainuly:0TTJx8Z3jQXhNqxQ@tuition.4yy9m.mongodb.net/tuition_management?retryWrites=true&w=majority&appName=tuition';
 
-mongoose.connect(str)
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('Could not connect to MongoDB...', err));
 
-// Serve static files (e.g., React build or static HTML)
-app.use(express.static(path.join(__dirname, 'public')));  // Adjust the 'public' folder to wherever your frontend files are
+// Serve static files for frontend
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Root route serves index.html for frontend
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));  // Adjust this if your frontend is in another folder
+// Root route serves index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Create Student Schema and Model
+// MongoDB Student Schema and Model
 const studentSchema = new mongoose.Schema({
-    name: String,
-    class: String,
-    nextFeeDate: Date,
-    feeStatus: { type: String, enum: ['Pending', 'Paid'], default: 'Pending' },
-    feeAmount: Number,
+  name: { type: String, required: true },
+  class: { type: String, required: true },
+  nextFeeDate: { type: Date, required: true },
+  feeStatus: { type: String, enum: ['Pending', 'Paid'], default: 'Pending' },
+  feeAmount: { type: Number, required: true },
 });
 
 const Student = mongoose.model('Student', studentSchema);
 
-// Endpoint to get all students
+// API Endpoints
+
+// Get all students
 app.get('/api/students', async (req, res) => {
-    try {
-        const students = await Student.find(); // Fetch all students from DB
-        res.json(students);
-    } catch (err) {
-        console.error('Error retrieving students:', err);
-        res.status(500).json({ message: 'Error retrieving students' });
-    }
+  try {
+    const students = await Student.find();
+    res.json(students);
+  } catch (err) {
+    console.error('Error retrieving students:', err);
+    res.status(500).json({ message: 'Error retrieving students' });
+  }
 });
 
-// Endpoint to update the fee status of a student
-app.post('/api/update-status', async (req, res) => {
-    const { id, feeStatus } = req.body;
-    if (!id || !feeStatus) {
-        return res.status(400).json({ success: false, message: 'Student ID and fee status are required' });
-    }
-    try {
-        const student = await Student.findById(id);
-        if (student) {
-            student.feeStatus = feeStatus;
-            await student.save(); // Save the updated student
-            res.json({ success: true, student });
-        } else {
-            res.status(404).json({ success: false, message: 'Student not found' });
-        }
-    } catch (err) {
-        console.error('Error updating fee status:', err);
-        res.status(500).json({ success: false, message: 'Error updating fee status' });
-    }
-});
-
-// Endpoint to add a new student
+// Add a new student
 app.post('/api/add-student', async (req, res) => {
-    const { name, studentClass, nextFeeDate, feeAmount } = req.body;
-    if (!name || !studentClass || !nextFeeDate || !feeAmount) {
-        return res.status(400).json({ success: false, message: 'All fields are required' });
-    }
+  const { name, studentClass, nextFeeDate, feeAmount } = req.body;
+  if (!name || !studentClass || !nextFeeDate || !feeAmount) {
+    return res.status(400).json({ success: false, message: 'All fields are required' });
+  }
 
-    try {
-        const newStudent = new Student({
-            name,
-            class: studentClass,
-            nextFeeDate: new Date(nextFeeDate),
-            feeAmount,
-        });
-        await newStudent.save(); // Save the new student to DB
-        res.json({ success: true, student: newStudent });  // Send back the added student
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Error adding student', error: err });
-    }
+  try {
+    const newStudent = new Student({
+      name,
+      class: studentClass,
+      nextFeeDate: new Date(nextFeeDate),
+      feeAmount,
+    });
+    await newStudent.save();
+    res.status(201).json({ success: true, student: newStudent });
+  } catch (err) {
+    console.error('Error adding student:', err);
+    res.status(500).json({ success: false, message: 'Error adding student', error: err });
+  }
 });
 
+// Update student fee status
+app.post('/api/update-status', async (req, res) => {
+  const { id, feeStatus } = req.body;
+  if (!id || !feeStatus) {
+    return res.status(400).json({ success: false, message: 'Student ID and fee status are required' });
+  }
+
+  try {
+    const student = await Student.findById(id);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    student.feeStatus = feeStatus;
+    await student.save();
+    res.json({ success: true, student });
+  } catch (err) {
+    console.error('Error updating fee status:', err);
+    res.status(500).json({ success: false, message: 'Error updating fee status', error: err });
+  }
+});
+
+// Filter students by next fee month (Optional if needed for specific backend filtering)
+app.get('/api/students-by-month', async (req, res) => {
+  const { month } = req.query; // Expects month in "MM" format
+  if (!month) {
+    return res.status(400).json({ success: false, message: 'Month is required' });
+  }
+
+  try {
+    const students = await Student.find({
+      nextFeeDate: {
+        $gte: new Date(`${new Date().getFullYear()}-${month}-01`),
+        $lt: new Date(`${new Date().getFullYear()}-${month}-31`),
+      },
+    });
+    res.json(students);
+  } catch (err) {
+    console.error('Error filtering students by month:', err);
+    res.status(500).json({ message: 'Error filtering students by month' });
+  }
+});
+
+// Handle unknown API routes
+app.use((req, res) => {
+  res.status(404).json({ message: 'API route not found' });
+});
 
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
