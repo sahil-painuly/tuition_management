@@ -137,26 +137,29 @@ const addStudent = async () => {
 
 // Mark Fee as Paid
 const markFeePaid = async (studentId) => {
-    console.log("Student ID:", studentId);  // Check if this is the correct ID
     try {
-        const response = await fetch(`${API_BASE_URL}/update-status`, {
-            method: "PATCH",  // Change POST to PATCH if needed
+        // Send the POST request to update the fee status
+        const response = await fetch("http://localhost:5000/api/update-status", {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                id: studentId,
-                feeStatus: "Paid",
+                id: studentId,   // student ID to update
+                feeStatus: "Paid", // Set the status to "Paid"
             }),
         });
 
+        // Parse the response
         const data = await response.json();
+
+        // Check if the update was successful
         if (data.success) {
             alert("Fee status updated successfully!");
-            // Refresh student list
+            // Refresh the student data to reflect changes
             students = await fetchData("students");
             updateStats();
-            renderStudents(currentMonth);
+            renderStudents(currentMonth);  // Ensure you re-render the updated student list
         } else {
             alert("Error updating fee status: " + data.message);
         }
