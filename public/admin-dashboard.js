@@ -126,7 +126,7 @@ const addStudent = async () => {
 const markFeePaid = async (studentId) => {
     try {
         const response = await fetch(`${API_BASE_URL}/update-status`, {
-            method: "POST",
+            method: "PATCH", // Ensure PATCH is used for updating resources
             headers: {
                 "Content-Type": "application/json",
             },
@@ -139,10 +139,14 @@ const markFeePaid = async (studentId) => {
         const data = await response.json();
         if (data.success) {
             alert("Fee status updated successfully!");
-            // Refresh student list
-            students = await fetchData("students");
-            updateStats();
-            renderStudents(currentMonth);
+
+            // Find the updated student in the array and update the feeStatus
+            const studentIndex = students.findIndex(student => student._id === studentId);
+            if (studentIndex !== -1) {
+                students[studentIndex].feeStatus = "Paid"; // Update feeStatus locally
+                renderStudents(currentMonth); // Re-render the student list
+                updateStats(); // Update stats based on the new data
+            }
         } else {
             alert("Error updating fee status: " + data.message);
         }
@@ -151,6 +155,7 @@ const markFeePaid = async (studentId) => {
         alert("Failed to update fee status. Please try again later.");
     }
 };
+
 
 // Populate Month Dropdown
 const populateMonthDropdown = () => {
