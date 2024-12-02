@@ -59,35 +59,48 @@ const updateStats = () => {
 
 // Render Students Table
 const renderStudents = (month) => {
-    const tableBody = document.getElementById("student-records");
-    tableBody.innerHTML = ""; // Clear existing rows
+    const studentRecords = document.getElementById("student-records");
+    studentRecords.innerHTML = ""; // Clear previous records
 
-    const filteredStudents = students.filter((student) => {
-        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1;
-        return studentMonth === parseInt(month);
-    });
-
+    const filteredStudents = students.filter(student => student.nextFeeDate.includes(month));
+    
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
 
-        row.innerHTML = `
-            <td>${student.name}</td>
-            <td>${student.studentClass}</td>
-            <td>${new Date(student.nextFeeDate).toLocaleDateString()}</td>
-            <td>${student.feeStatus}</td>
-            <td>₹${student.feeAmount}</td>
-            <td>
-                ${
-                    student.feeStatus === "Pending"
-                        ? `<button class="btn btn-success" onclick="markFeePaid('${student._id}')">Mark Paid</button>`
-                        : "-"
-                }
-            </td>
-        `;
+        const nameCell = document.createElement("td");
+        nameCell.textContent = student.name;
+        row.appendChild(nameCell);
 
-        tableBody.appendChild(row);
+        const classCell = document.createElement("td");
+        classCell.textContent = student.class || "N/A"; // Default to "N/A" if class is undefined
+        row.appendChild(classCell);
+
+        const feeDateCell = document.createElement("td");
+        feeDateCell.textContent = new Date(student.nextFeeDate).toLocaleDateString();
+        row.appendChild(feeDateCell);
+
+        const statusCell = document.createElement("td");
+        statusCell.textContent = student.feeStatus;
+        row.appendChild(statusCell);
+
+        const feeAmountCell = document.createElement("td");
+        feeAmountCell.textContent = `₹${student.feeAmount}`;
+        row.appendChild(feeAmountCell);
+
+        const actionCell = document.createElement("td");
+        if (student.feeStatus === "Pending") {
+            const markPaidBtn = document.createElement("button");
+            markPaidBtn.textContent = "Mark Paid";
+            markPaidBtn.classList.add("btn", "btn-success");
+            markPaidBtn.addEventListener("click", () => markFeePaid(student._id));
+            actionCell.appendChild(markPaidBtn);
+        }
+        row.appendChild(actionCell);
+
+        studentRecords.appendChild(row);
     });
 };
+
 
 
 // Add New Student
@@ -124,9 +137,10 @@ const addStudent = async () => {
 
 // Mark Fee as Paid
 const markFeePaid = async (studentId) => {
+    console.log("Student ID:", studentId);  // Check if this is the correct ID
     try {
         const response = await fetch(`${API_BASE_URL}/update-status`, {
-            method: "PATCH", // Ensure PATCH is used for updating resources
+            method: "PATCH",  // Change POST to PATCH if needed
             headers: {
                 "Content-Type": "application/json",
             },
@@ -139,14 +153,10 @@ const markFeePaid = async (studentId) => {
         const data = await response.json();
         if (data.success) {
             alert("Fee status updated successfully!");
-
-            // Find the updated student in the array and update the feeStatus
-            const studentIndex = students.findIndex(student => student._id === studentId);
-            if (studentIndex !== -1) {
-                students[studentIndex].feeStatus = "Paid"; // Update feeStatus locally
-                renderStudents(currentMonth); // Re-render the student list
-                updateStats(); // Update stats based on the new data
-            }
+            // Refresh student list
+            students = await fetchData("students");
+            updateStats();
+            renderStudents(currentMonth);
         } else {
             alert("Error updating fee status: " + data.message);
         }
