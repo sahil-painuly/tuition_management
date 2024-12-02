@@ -137,8 +137,7 @@ const addStudent = async () => {
 
 // Mark Fee as Paid
 const markFeePaid = async (studentId, currentFeeStatus) => {
-    // Toggle the fee status
-    const newFeeStatus = currentFeeStatus === "Paid" ? "Pending" : "Paid";  // Switch between Paid and Pending
+    const newFeeStatus = currentFeeStatus === "Paid" ? "Pending" : "Paid";
 
     try {
         // Send the POST request to update the fee status
@@ -156,8 +155,10 @@ const markFeePaid = async (studentId, currentFeeStatus) => {
         // Parse the response
         const data = await response.json();
 
+        console.log(data); // Debugging line to check the response structure
+
         // Check if the update was successful
-        if (data.success) {
+        if (data.success === true) {
             alert(`Fee status updated to ${newFeeStatus} successfully!`);
             // Refresh the student data to reflect changes
             students = await fetchData("students");
@@ -171,6 +172,7 @@ const markFeePaid = async (studentId, currentFeeStatus) => {
         alert("Failed to update fee status. Please try again later.");
     }
 };
+
 
 
 
