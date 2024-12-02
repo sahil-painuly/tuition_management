@@ -57,7 +57,6 @@ const updateStats = () => {
     document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
-// Render Students Table
 const renderStudents = (month) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
@@ -67,7 +66,7 @@ const renderStudents = (month) => {
         const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
         return studentMonth === parseInt(month); // Match the month
     });
-    
+
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
 
@@ -92,19 +91,20 @@ const renderStudents = (month) => {
         row.appendChild(feeAmountCell);
 
         const actionCell = document.createElement("td");
-        if (student.feeStatus === "Pending") {
-            const markPaidBtn = document.createElement("button");
-            markPaidBtn.textContent = "Mark Paid";
-            markPaidBtn.classList.add("btn", "btn-success");
-            markPaidBtn.addEventListener("click", () => markFeePaid(student._id, student.feeStatus));
-            actionCell.appendChild(markPaidBtn);
-        }
+        const toggleBtn = document.createElement("button");
+        toggleBtn.textContent = student.feeStatus === "Paid" ? "Unmark Paid" : "Mark Paid";
+        toggleBtn.classList.add("btn", student.feeStatus === "Paid" ? "btn-danger" : "btn-success");
+
+        toggleBtn.addEventListener("click", () => {
+            markFeePaid(student._id);  // Directly call the markFeePaid function with the student ID
+        });
+
+        actionCell.appendChild(toggleBtn);
         row.appendChild(actionCell);
 
         studentRecords.appendChild(row);
     });
 };
-
 
 // Add New Student
 const addStudent = async () => {
@@ -139,34 +139,29 @@ const addStudent = async () => {
 };
 
 // Mark Fee as Paid
-const markFeePaid = async (studentId, currentFeeStatus) => {
-    const newFeeStatus = currentFeeStatus === "Paid" ? "Pending" : "Paid";
+const markFeePaid = async (studentId) => {
+    const student = students.find(student => student._id === studentId); // Get the student by ID
+    const newFeeStatus = student.feeStatus === "Paid" ? "Pending" : "Paid"; // Toggle the status
 
     try {
-        // Send the POST request to update the fee status
         const response = await fetch(`${API_BASE_URL}/update-status`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                id: studentId,   // student ID to update
-                feeStatus: newFeeStatus, // Set the new toggled status
+                id: studentId,
+                feeStatus: newFeeStatus,
             }),
         });
 
-        // Parse the response
         const data = await response.json();
-
-        console.log(data); // Debugging line to check the response structure
-
-        // Check if the update was successful
-        if (data.success === true) {
+        if (data.success) {
             alert(`Fee status updated to ${newFeeStatus} successfully!`);
-            // Refresh the student data to reflect changes
+            // Refresh the student data and re-render
             students = await fetchData("students");
             updateStats();
-            renderStudents(currentMonth);  // Ensure you re-render the updated student list
+            renderStudents(currentMonth);  // Ensure updated student list
         } else {
             alert("Error updating fee status: " + data.message);
         }
@@ -175,9 +170,6 @@ const markFeePaid = async (studentId, currentFeeStatus) => {
         alert("Failed to update fee status. Please try again later.");
     }
 };
-
-
-
 
 // Populate Month Dropdown
 const populateMonthDropdown = () => {
@@ -190,7 +182,33 @@ const populateMonthDropdown = () => {
         monthSelect.appendChild(option);
     });
 
-    monthSelect.addEventListener("change", (e) => renderStudents(e.target.value));
+    monthSelect.addEventListener("change", async (e) => {
+        const selectedMonth = e.target.value;
+        await updateStatsForMonth(selectedMonth); // Update stats
+        renderStudents(selectedMonth); // Render students for the selected month
+    });
+};
+
+// Function to update stats based on selected month
+const updateStatsForMonth = async (month) => {
+    // Filter students by month
+    const filteredStudents = students.filter(student => {
+        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
+        return studentMonth === parseInt(month); // Match the month
+    });
+
+    // Update stats
+    const totalStudents = filteredStudents.length;
+    const feesCollected = filteredStudents
+        .filter((student) => student.feeStatus === "Paid")
+        .reduce((sum, student) => sum + student.feeAmount, 0);
+    const pendingFees = filteredStudents
+        .filter((student) => student.feeStatus === "Pending")
+        .reduce((sum, student) => sum + student.feeAmount, 0);
+
+    document.getElementById("total-students").textContent = totalStudents;
+    document.getElementById("fees-collected").textContent = `₹${feesCollected}`;
+    document.getElementById("pending-fees").textContent = `₹${pendingFees}`;
 };
 
 // Initialize Dashboard
