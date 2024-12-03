@@ -1,195 +1,106 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* General styles */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f7f7f7;
-    color: #333;
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
 }
 
-.dashboard {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-}
-
-.dashboard-header h1 {
-    font-size: 24px;
-}
-
-#logout-btn {
-    background-color: #f44336;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-#logout-btn:hover {
-    background-color: #e53935;
-}
-
-.dashboard-content {
-    background-color: white;
-    padding: 20px;
-    margin-top: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.stats {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.stat-card {
-    background-color: #f1f1f1;
-    padding: 20px;
-    border-radius: 8px;
-    width: 30%;
-    text-align: center;
-}
-
-.stat-card h3 {
-    font-size: 18px;
-    margin-bottom: 10px;
-}
-
-.stat-card p {
-    font-size: 24px;
+/* Header */
+h1 {
     font-weight: bold;
-    color: #4CAF50;
 }
 
-.month-select {
-    margin-bottom: 20px;
+/* Stats Section Hover Effect */
+.stat-box {
+    transition: all 0.3s ease-in-out;
+}
+.stat-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 128, 0, 0.2);
 }
 
-#month-select {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    font-size: 16px;
+/* Table */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 128, 0, 0.1);
 }
 
-.student-list {
-    margin-top: 30px;
+/* Buttons */
+button {
+    transition: all 0.3s ease-in-out;
 }
 
-.student-list h2 {
-    font-size: 20px;
-    margin-bottom: 20px;
-}
-
-#add-new-student-btn {
-    background-color: #008CBA;
+/* Custom Green Button for Action */
+.btn-custom {
+    background-color: #28a745;
+    border-color: #28a745;
     color: white;
-    padding: 10px 20px;
+}
+.btn-custom:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: scale(1.05);
+}
+
+/* Action Button Colors */
+.table .btn-custom {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+.table .btn-custom:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+/* Footer */
+footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 576px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    .card {
+        padding: 1rem;
+    }
+    #stats p {
+        font-size: 0.9rem;
+    }
+}
+/* Action buttons color */
+button.toggle-status-btn,
+button.update-fee-btn {
+    background-color: #28a745; /* Green theme color */
+    color: white;
     border: none;
-    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+button.toggle-status-btn:hover,
+button.update-fee-btn:hover {
+    background-color: #218838; /* Darker green on hover */
+    transform: scale(1.05); /* Slight zoom effect */
+}
+
+/* Additional button styles to maintain theme */
+button {
     border-radius: 5px;
-    margin-bottom: 20px;
-    transition: background-color 0.3s;
+}
+
+/* Ensuring buttons remain styled even after dynamic data is loaded */
+button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Optional focus effect */
+}
+
+/* Optional - Apply button styling to the 'Add New Student' button as well */
+#add-new-student-btn {
+    background-color: #007bff; /* Blue theme for Add button */
+    color: white;
 }
 
 #add-new-student-btn:hover {
-    background-color: #007bb5;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th, td {
-    padding: 12px;
-    text-align: center;
-    border: 1px solid #ddd;
-}
-
-th {
-    background-color: #4CAF50;
-    color: white;
-}
-
-td.fee-status.pending {
-    color: #f44336; /* Red for pending */
-}
-
-td.fee-status.paid {
-    color: green;
-}
-
-td.fee-amount {
-    font-weight: bold;
-}
-
-button {
-    background-color: #4CAF50;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-button:active {
-    background-color: #3e8e41;
-}
-
-button:focus {
-    outline: 2px dashed #4CAF50;
-    outline-offset: 4px;
-}
-
-#update-fee-btn {
-    background-color: #f39c12;
-}
-
-#update-fee-btn:hover {
-    background-color: #e67e22;
-}
-
-#remove-student-btn {
-    background-color: #e74c3c;
-}
-
-#remove-student-btn:hover {
-    background-color: #c0392b;
-}
-
-.action-buttons {
-    margin-top: 20px;
-}
-
-#student-records td:last-child {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-#student-records td button {
-    margin: 0 5px;
+    background-color: #0056b3; /* Darker blue on hover */
+    transform: scale(1.05);
 }
