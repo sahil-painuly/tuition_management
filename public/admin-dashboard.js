@@ -62,6 +62,11 @@ const renderStudents = (month, isFilterApplied = false) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
+    if (!students || students.length === 0) {
+        studentRecords.innerHTML = "<tr><td colspan='6'>No students found.</td></tr>";
+        return;
+    }
+
     // Filter students by selected month
     const filteredStudents = students.filter(student => {
         const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
@@ -73,9 +78,12 @@ const renderStudents = (month, isFilterApplied = false) => {
         alert("Filter applied successfully!");
     }
 
+    if (filteredStudents.length === 0) {
+        studentRecords.innerHTML = "<tr><td colspan='6'>No students found for this month.</td></tr>";
+    }
+
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
-
         row.innerHTML = `
             <td>${student.name}</td>
             <td>${student.class || "N/A"}</td>
@@ -83,14 +91,11 @@ const renderStudents = (month, isFilterApplied = false) => {
             <td>${student.feeStatus}</td>
             <td>₹${student.feeAmount}</td>
             <td>
-                <button class="btn btn-custom ${
-                    student.feeStatus === "Paid" ? "btn-danger" : "btn-success"
-                }" onclick="markFeePaid('${student._id}')">
+                <button class="btn btn-custom ${student.feeStatus === "Paid" ? "btn-danger" : "btn-success"}" onclick="markFeePaid('${student._id}')">
                     ${student.feeStatus === "Paid" ? "Unmark Paid" : "Mark Paid"}
                 </button>
             </td>
         `;
-
         studentRecords.appendChild(row);
     });
 };
@@ -108,6 +113,12 @@ const addStudent = async () => {
         return;
     }
 
+    const nextFeeDateObj = new Date(nextFeeDate);
+    if (nextFeeDateObj <= new Date()) {
+        alert("The next fee date must be a future date.");
+        return;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/add-student`, {
             method: "POST",
@@ -117,7 +128,7 @@ const addStudent = async () => {
         if (!response.ok) throw new Error("Failed to add student");
 
         const newStudent = await response.json();
-        students.push(newStudent);
+        students.push(newStudent.student);
         alert("Student added successfully!");
         updateStats();
         renderStudents(currentMonth); // Render updated data
@@ -141,10 +152,10 @@ const markFeePaid = async (studentId) => {
 
         const data = await response.json();
         if (data.success) {
+            student.feeStatus = newFeeStatus;  // Update local student status
             alert(`Fee status updated to ${newFeeStatus} successfully!`);
-            students = await fetchData("students"); // Refresh data
             updateStats();
-            renderStudents(currentMonth); // Render updated data
+            renderStudents(currentMonth); // Re-render students
         } else {
             alert("Error updating fee status: " + data.message);
         }
