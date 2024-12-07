@@ -165,13 +165,11 @@ const populateMonthDropdown = () => {
         monthSelect.appendChild(option);
     });
 
-        monthSelect.addEventListener("change", async (e) => {
-        const selectedMonth = e.target.value;
+    // Add event listener to the Apply Filter button
+    document.getElementById("apply-filter-btn").addEventListener("click", () => {
+        const selectedMonth = monthSelect.value; // Get selected month
         alert("Filter applied successfully!"); // This alert will trigger after applying the filter
-        await updateStatsForMonth(selectedMonth); // Update stats for the selected month
-        renderStudents(selectedMonth); // Render students for the selected month
-});
-
+        renderStudents(selectedMonth, true); // Render students for the selected month and show success alert
     });
 };
 
