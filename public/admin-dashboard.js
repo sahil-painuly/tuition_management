@@ -15,7 +15,6 @@ const months = [
     { name: "May", value: "05" },
 ];
 const currentMonth = new Date().getMonth() + 1; // 1-based month
-const currentDate = new Date().getDate(); // Get current day of the month
 
 // Password Protection
 const verifyPassword = () => {
@@ -59,18 +58,16 @@ const updateStats = () => {
 };
 
 // Render Students (Filter by batch, status, and month)
-const renderStudents = (batch, status, month, filterDate = false) => {
+const renderStudents = (batch, status, month) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
     const filteredStudents = students.filter(student => {
         const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
-        const studentDate = new Date(student.nextFeeDate).getDate(); // Get the day of the month
         const isMatchingBatch = batch ? student.batch === batch : true;
         const isMatchingStatus = status ? student.feeStatus === status : true;
         const isMatchingMonth = month ? studentMonth === parseInt(month) : true;
-        const isMatchingDate = filterDate ? (studentDate >= 1 && studentDate <= currentDate) : true; // Filter between 1st and current date
-        return isMatchingBatch && isMatchingStatus && isMatchingMonth && isMatchingDate;
+        return isMatchingBatch && isMatchingStatus && isMatchingMonth;
     });
 
     if (filteredStudents.length === 0) {
@@ -134,8 +131,7 @@ const populateBatchFilter = () => {
         button.onclick = () => {
             const status = document.querySelector(".status-btn:checked")?.value || null;
             const month = document.getElementById("month-select").value;
-            const filterDate = document.getElementById("apply-date-filter-btn").checked; // Date filter toggle
-            renderStudents(batch, status, month, filterDate);
+            renderStudents(batch, status, month);
         };
         batchButtonsContainer.appendChild(button);
     });
@@ -159,8 +155,7 @@ const setupFilters = () => {
         const batch = document.querySelector(".batch-btn.active")?.value || null;
         const status = document.querySelector(".status-btn:checked")?.value || null;
         const month = document.getElementById("month-select").value;
-        const filterDate = document.getElementById("apply-date-filter-btn").checked;
-        renderStudents(batch, status, month, filterDate);
+        renderStudents(batch, status, month);
     });
 };
 
