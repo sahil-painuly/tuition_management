@@ -15,6 +15,7 @@ const months = [
     { name: "May", value: "05" },
 ];
 const currentMonth = new Date().getMonth() + 1; // 1-based month
+const currentDate = new Date();
 
 // Password Protection
 const verifyPassword = () => {
@@ -62,12 +63,19 @@ const renderStudents = (batch, status, month) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); // 1st day of current month
+    const currentDay = currentDate.getDate(); // Current day of the month
+
     const filteredStudents = students.filter(student => {
-        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
+        const studentMonth = new Date(student.nextFeeDate).getMonth(); // Get the month (0-based)
+        const studentDay = new Date(student.nextFeeDate).getDate(); // Get the day (1-based)
+        const feeDate = new Date(student.nextFeeDate);
+        const isInDateRange = feeDate >= startOfMonth && feeDate <= currentDate; // Check if the date is in the range (1st to current day)
         const isMatchingBatch = batch ? student.batch === batch : true;
         const isMatchingStatus = status ? student.feeStatus === status : true;
-        const isMatchingMonth = month ? studentMonth === parseInt(month) : true;
-        return isMatchingBatch && isMatchingStatus && isMatchingMonth;
+        const isMatchingMonth = month ? studentMonth + 1 === parseInt(month) : true;
+
+        return isInDateRange && isMatchingBatch && isMatchingStatus && isMatchingMonth;
     });
 
     if (filteredStudents.length === 0) {
