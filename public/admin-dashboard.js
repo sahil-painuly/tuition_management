@@ -168,7 +168,6 @@ const populateMonthDropdown = () => {
     // Add event listener to the Apply Filter button
     document.getElementById("apply-filter-btn").addEventListener("click", () => {
         const selectedMonth = monthSelect.value; // Get selected month
-        alert("Filter applied successfully!"); // This alert will trigger after applying the filter
         renderStudents(selectedMonth, true); // Render students for the selected month and show success alert
     });
 };
