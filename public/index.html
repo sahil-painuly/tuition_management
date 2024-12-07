@@ -47,15 +47,15 @@
                         <label class="form-label text-success">Select Batches:</label>
                         <div class="d-flex flex-wrap gap-2">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="1" id="batch1">
+                                <input class="form-check-input batch-btn" type="checkbox" value="1" id="batch1" data-batch="1">
                                 <label class="form-check-label" for="batch1">Batch 1</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="2" id="batch2">
+                                <input class="form-check-input batch-btn" type="checkbox" value="2" id="batch2" data-batch="2">
                                 <label class="form-check-label" for="batch2">Batch 2</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="3" id="batch3">
+                                <input class="form-check-input batch-btn" type="checkbox" value="3" id="batch3" data-batch="3">
                                 <label class="form-check-label" for="batch3">Batch 3</label>
                             </div>
                         </div>
@@ -64,17 +64,17 @@
                         <label class="form-label text-success">Payment Status:</label>
                         <div class="d-flex gap-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="Paid" id="statusPaid">
+                                <input class="form-check-input status-btn" type="checkbox" value="Paid" id="statusPaid" data-status="Paid">
                                 <label class="form-check-label" for="statusPaid">Paid</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="Pending" id="statusPending">
+                                <input class="form-check-input status-btn" type="checkbox" value="Pending" id="statusPending" data-status="Pending">
                                 <label class="form-check-label" for="statusPending">Pending</label>
                             </div>
                         </div>
                     </div>
                     <div class="d-flex justify-content-end">
-                        <button class="btn btn-custom" id="apply-filter-btn"><i class="fas fa-filter"></i> Apply Filters</button>
+                        <button class="btn btn-success" id="apply-filter-btn"><i class="fas fa-filter"></i> Apply Filters</button>
                     </div>
 
                     <!-- Table Section -->
