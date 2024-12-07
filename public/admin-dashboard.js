@@ -58,8 +58,8 @@ const updateStats = () => {
     document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
-// Render Students (Filter by batch, status, and month)
-const renderStudents = (batch, status, month) => {
+// Render Students (Filter by batch, status, and date range)
+const renderStudents = (batch, status, month, startDate, endDate) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
@@ -70,7 +70,11 @@ const renderStudents = (batch, status, month) => {
         const studentMonth = new Date(student.nextFeeDate).getMonth(); // Get the month (0-based)
         const studentDay = new Date(student.nextFeeDate).getDate(); // Get the day (1-based)
         const feeDate = new Date(student.nextFeeDate);
-        const isInDateRange = feeDate >= startOfMonth && feeDate <= currentDate; // Check if the date is in the range (1st to current day)
+        
+        // Check if the date is in the range (start date to end date)
+        const isInDateRange = (startDate && feeDate >= new Date(startDate)) && (endDate && feeDate <= new Date(endDate));
+
+        // Other filters
         const isMatchingBatch = batch ? student.batch === batch : true;
         const isMatchingStatus = status ? student.feeStatus === status : true;
         const isMatchingMonth = month ? studentMonth + 1 === parseInt(month) : true;
@@ -139,7 +143,9 @@ const populateBatchFilter = () => {
         button.onclick = () => {
             const status = document.querySelector(".status-btn:checked")?.value || null;
             const month = document.getElementById("month-select").value;
-            renderStudents(batch, status, month);
+            const startDate = document.getElementById("start-date").value;
+            const endDate = document.getElementById("end-date").value;
+            renderStudents(batch, status, month, startDate, endDate);
         };
         batchButtonsContainer.appendChild(button);
     });
@@ -163,7 +169,9 @@ const setupFilters = () => {
         const batch = document.querySelector(".batch-btn.active")?.value || null;
         const status = document.querySelector(".status-btn:checked")?.value || null;
         const month = document.getElementById("month-select").value;
-        renderStudents(batch, status, month);
+        const startDate = document.getElementById("start-date").value;
+        const endDate = document.getElementById("end-date").value;
+        renderStudents(batch, status, month, startDate, endDate);
     });
 };
 
