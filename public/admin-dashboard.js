@@ -169,6 +169,7 @@ const populateMonthDropdown = () => {
     document.getElementById("apply-filter-btn").addEventListener("click", () => {
         const selectedMonth = monthSelect.value; // Get selected month
         renderStudents(selectedMonth, true); // Render students for the selected month and show success alert
+        updateStatsForMonth(selectedMonth); // Update stats based on filtered month
     });
 };
 
