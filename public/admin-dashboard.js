@@ -57,14 +57,14 @@ const updateStats = () => {
     document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
-// Render Students (Filter by batch and status)
+// Render Students (Filter by batch, status, and month)
 const renderStudents = (batch, status, month) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
     const filteredStudents = students.filter(student => {
         const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
-        const isMatchingBatch = batch ? student.studentClass === batch : true;
+        const isMatchingBatch = batch ? student.batch === batch : true;
         const isMatchingStatus = status ? student.feeStatus === status : true;
         const isMatchingMonth = month ? studentMonth === parseInt(month) : true;
         return isMatchingBatch && isMatchingStatus && isMatchingMonth;
@@ -93,44 +93,6 @@ const renderStudents = (batch, status, month) => {
     });
 };
 
-// Add New Student
-const addStudent = async () => {
-    const name = prompt("Enter student name:");
-    const studentClass = prompt("Enter student class:");
-    const nextFeeDate = prompt("Enter next fee date (YYYY-MM-DD):");
-    const feeAmount = parseFloat(prompt("Enter fee amount:"));
-
-    const nextFeeDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!name || !studentClass || !nextFeeDate || isNaN(feeAmount) || !nextFeeDateRegex.test(nextFeeDate)) {
-        alert("All fields are required, and the date must be in YYYY-MM-DD format!");
-        return;
-    }
-
-    const nextFeeDateObj = new Date(nextFeeDate);
-    if (nextFeeDateObj <= new Date()) {
-        alert("The next fee date must be a future date.");
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/add-student`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, studentClass, nextFeeDate, feeAmount }),
-        });
-        if (!response.ok) throw new Error("Failed to add student");
-
-        const newStudent = await response.json();
-        students.push(newStudent.student);
-        alert("Student added successfully!");
-        updateStats();
-        renderStudents(currentMonth); // Render updated data
-    } catch (error) {
-        console.error("Error adding student:", error);
-        alert("Failed to add student. Please try again.");
-    }
-};
-
 // Mark Fee as Paid
 const markFeePaid = async (studentId) => {
     const student = students.find(student => student._id === studentId);
@@ -147,10 +109,9 @@ const markFeePaid = async (studentId) => {
         if (data.success) {
             student.feeStatus = newFeeStatus;  // Update local student status
             alert(`Fee status updated to ${newFeeStatus} successfully!`);
-            updateStats();
-            renderStudents(currentMonth); // Re-render students
+            renderStudents();  // Re-render students after update
         } else {
-            alert("Error updating fee status: " + data.message);
+            alert("Failed to update fee status.");
         }
     } catch (error) {
         console.error("Error updating fee status:", error);
@@ -158,64 +119,56 @@ const markFeePaid = async (studentId) => {
     }
 };
 
-// Populate Month Dropdown and Handle Filter Change
-const populateMonthDropdown = () => {
+// Populate Batch Filter
+const populateBatchFilter = () => {
+    const batchButtonsContainer = document.getElementById("batch-buttons-container");
+    const batches = ["1", "2", "3"]; // Assuming batches are 1, 2, 3
+    batches.forEach(batch => {
+        const button = document.createElement("button");
+        button.classList.add("batch-btn", "btn", "btn-outline-success");
+        button.textContent = `Batch ${batch}`;
+        button.value = batch;
+        button.onclick = () => {
+            const status = document.querySelector(".status-btn:checked")?.value || null;
+            const month = document.getElementById("month-select").value;
+            renderStudents(batch, status, month);
+        };
+        batchButtonsContainer.appendChild(button);
+    });
+};
+
+// Populate Month Filter
+const populateMonthFilter = () => {
     const monthSelect = document.getElementById("month-select");
-    months.forEach((month) => {
+    months.forEach(month => {
         const option = document.createElement("option");
         option.value = month.value;
         option.textContent = month.name;
-        if (month.value === String(currentMonth).padStart(2, "0")) option.selected = true;
         monthSelect.appendChild(option);
     });
+    monthSelect.value = currentMonth.toString().padStart(2, "0");
+};
 
-    // Add event listener to the Apply Filter button
+// Setup Filters and Apply Button
+const setupFilters = () => {
     document.getElementById("apply-filter-btn").addEventListener("click", () => {
-        const selectedMonth = monthSelect.value; // Get selected month
-        renderStudents(null, null, selectedMonth); // Render students for the selected month
+        const batch = document.querySelector(".batch-btn.active")?.value || null;
+        const status = document.querySelector(".status-btn:checked")?.value || null;
+        const month = document.getElementById("month-select").value;
+        renderStudents(batch, status, month);
     });
 };
 
-// Batch and Pending Filter Logic
-const setupBatchFilter = () => {
-    const batchButtons = document.querySelectorAll(".batch-btn");
-    batchButtons.forEach(button => {
-        button.addEventListener("click", () => {
-            const batch = button.dataset.batch;
-            const status = document.querySelector(".status-btn.active")?.dataset.status || null;
-            const month = document.getElementById("month-select").value;
-            renderStudents(batch, status, month);
-        });
-    });
-};
-
-// Pending Filter Logic
-const setupPendingFilter = () => {
-    const statusButtons = document.querySelectorAll(".status-btn");
-    statusButtons.forEach(button => {
-        button.addEventListener("click", () => {
-            const status = button.dataset.status;
-            const batch = document.querySelector(".batch-btn.active")?.dataset.batch || null;
-            const month = document.getElementById("month-select").value;
-            renderStudents(batch, status, month);
-        });
-    });
-};
-
-// Initialize Dashboard
-const initDashboard = async () => {
+// Initial Setup and Fetch Data
+const initializeDashboard = async () => {
     if (!verifyPassword()) return;
-
-    populateMonthDropdown(); // Populate month dropdown
-    setupBatchFilter(); // Set up batch filters
-    setupPendingFilter(); // Set up pending status filters
-
     students = await fetchData("students");
-    updateStats(); // Update overall stats
-    renderStudents(currentMonth); // Render students for current month
-
-    document.getElementById("add-new-student-btn").addEventListener("click", addStudent); // Add new student functionality
+    updateStats();
+    populateMonthFilter();
+    populateBatchFilter();
+    renderStudents();
+    setupFilters();
 };
 
-// Start the Dashboard
-document.addEventListener("DOMContentLoaded", initDashboard);
+// Initialize Dashboard on Load
+initializeDashboard();
