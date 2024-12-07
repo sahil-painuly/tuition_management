@@ -16,7 +16,6 @@ mongoose.connect(mongoURI)
   .then(() => console.log('Connected to MongoDB Atlas'))
   .catch(err => console.error('Could not connect to MongoDB...', err));
 
-
 // Serve static files for frontend
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -38,10 +37,21 @@ const Student = mongoose.model('Student', studentSchema);
 
 // API Endpoints
 
-// Get all students
+// Get all students with optional month filtering
 app.get('/api/students', async (req, res) => {
+  const { month } = req.query; // Get month from query parameters
+
   try {
-    const students = await Student.find();
+    let query = {};
+
+    // If month is provided, filter by nextFeeDate
+    if (month) {
+      const startDate = new Date(`${new Date().getFullYear()}-${month}-01`);
+      const endDate = new Date(`${new Date().getFullYear()}-${parseInt(month) + 1}-01`);
+      query.nextFeeDate = { $gte: startDate, $lt: endDate }; // Filter by month range
+    }
+
+    const students = await Student.find(query);
     res.json(students);
   } catch (err) {
     console.error('Error retrieving students:', err);
