@@ -57,29 +57,22 @@ const updateStats = () => {
     document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
-// Render Students (Filter by month)
-const renderStudents = (month, isFilterApplied = false) => {
+// Render Students (Filter by batch and status)
+const renderStudents = (batch, status, month) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
-    if (!students || students.length === 0) {
-        studentRecords.innerHTML = "<tr><td colspan='6'>No students found.</td></tr>";
-        return;
-    }
-
-    // Filter students by selected month
     const filteredStudents = students.filter(student => {
         const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
-        return studentMonth === parseInt(month); // Match the month
+        const isMatchingBatch = batch ? student.studentClass === batch : true;
+        const isMatchingStatus = status ? student.feeStatus === status : true;
+        const isMatchingMonth = month ? studentMonth === parseInt(month) : true;
+        return isMatchingBatch && isMatchingStatus && isMatchingMonth;
     });
 
-    // If filter is applied, show success alert
-    if (isFilterApplied) {
-        alert("Filter applied successfully!");
-    }
-
     if (filteredStudents.length === 0) {
-        studentRecords.innerHTML = "<tr><td colspan='6'>No students found for this month.</td></tr>";
+        studentRecords.innerHTML = "<tr><td colspan='6'>No students found.</td></tr>";
+        return;
     }
 
     filteredStudents.forEach((student) => {
@@ -179,29 +172,34 @@ const populateMonthDropdown = () => {
     // Add event listener to the Apply Filter button
     document.getElementById("apply-filter-btn").addEventListener("click", () => {
         const selectedMonth = monthSelect.value; // Get selected month
-        renderStudents(selectedMonth, true); // Render students for the selected month and show success alert
-        updateStatsForMonth(selectedMonth); // Update stats based on filtered month
+        renderStudents(null, null, selectedMonth); // Render students for the selected month
     });
 };
 
-// Update Stats for Filtered Month
-const updateStatsForMonth = (month) => {
-    const filteredStudents = students.filter(student => {
-        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1;
-        return studentMonth === parseInt(month);
+// Batch and Pending Filter Logic
+const setupBatchFilter = () => {
+    const batchButtons = document.querySelectorAll(".batch-btn");
+    batchButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const batch = button.dataset.batch;
+            const status = document.querySelector(".status-btn.active")?.dataset.status || null;
+            const month = document.getElementById("month-select").value;
+            renderStudents(batch, status, month);
+        });
     });
+};
 
-    stats.totalStudents = filteredStudents.length;
-    stats.feesCollected = filteredStudents
-        .filter(student => student.feeStatus === "Paid")
-        .reduce((sum, student) => sum + student.feeAmount, 0);
-    stats.pendingFees = filteredStudents
-        .filter(student => student.feeStatus === "Pending")
-        .reduce((sum, student) => sum + student.feeAmount, 0);
-
-    document.getElementById("total-students").textContent = stats.totalStudents;
-    document.getElementById("fees-collected").textContent = `₹${stats.feesCollected}`;
-    document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
+// Pending Filter Logic
+const setupPendingFilter = () => {
+    const statusButtons = document.querySelectorAll(".status-btn");
+    statusButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const status = button.dataset.status;
+            const batch = document.querySelector(".batch-btn.active")?.dataset.batch || null;
+            const month = document.getElementById("month-select").value;
+            renderStudents(batch, status, month);
+        });
+    });
 };
 
 // Initialize Dashboard
@@ -209,6 +207,8 @@ const initDashboard = async () => {
     if (!verifyPassword()) return;
 
     populateMonthDropdown(); // Populate month dropdown
+    setupBatchFilter(); // Set up batch filters
+    setupPendingFilter(); // Set up pending status filters
 
     students = await fetchData("students");
     updateStats(); // Update overall stats
