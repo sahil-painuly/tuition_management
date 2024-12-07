@@ -13,6 +13,7 @@ h1 {
 .stat-box {
     transition: all 0.3s ease-in-out;
 }
+
 .stat-box:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 128, 0, 0.2);
@@ -26,6 +27,7 @@ h1 {
 /* Buttons */
 button {
     transition: all 0.3s ease-in-out;
+    border-radius: 5px;
 }
 
 /* Custom Green Button for Action */
@@ -34,6 +36,7 @@ button {
     border-color: #28a745;
     color: white;
 }
+
 .btn-custom:hover {
     background-color: #218838;
     border-color: #1e7e34;
@@ -45,6 +48,7 @@ button {
     background-color: #28a745;
     border-color: #28a745;
 }
+
 .table .btn-custom:hover {
     background-color: #218838;
     border-color: #1e7e34;
@@ -68,7 +72,8 @@ footer {
         font-size: 0.9rem;
     }
 }
-/* Action buttons color */
+
+/* Action buttons for toggle and update */
 button.toggle-status-btn,
 button.update-fee-btn {
     background-color: #28a745; /* Green theme color */
@@ -83,18 +88,13 @@ button.update-fee-btn:hover {
     transform: scale(1.05); /* Slight zoom effect */
 }
 
-/* Additional button styles to maintain theme */
-button {
-    border-radius: 5px;
-}
-
 /* Ensuring buttons remain styled even after dynamic data is loaded */
 button:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Optional focus effect */
 }
 
-/* Optional - Apply button styling to the 'Add New Student' button as well */
+/* Add New Student button styles */
 #add-new-student-btn {
     background-color: #007bff; /* Blue theme for Add button */
     color: white;
@@ -103,4 +103,46 @@ button:focus {
 #add-new-student-btn:hover {
     background-color: #0056b3; /* Darker blue on hover */
     transform: scale(1.05);
+}
+
+/* Highlight hover on statistics boxes */
+.stat-box {
+    background-color: #ffffff; /* Ensures a clean look */
+    border: 1px solid #dcdcdc;
+}
+
+.stat-box:hover {
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); /* Adds greenish shadow on hover */
+}
+
+/* Table Styling */
+.table-bordered th, .table-bordered td {
+    border: 1px solid #dee2e6; /* Consistent border for table */
+}
+
+.table-bordered thead th {
+    background-color: #28a745;
+    color: white;
+    text-transform: uppercase;
+}
+
+/* Highlight Table Rows */
+.table tbody tr:hover {
+    background-color: rgba(40, 167, 69, 0.15);
+}
+
+/* Fee Status Colors */
+td.status {
+    font-weight: bold;
+    padding: 8px 12px;
+}
+
+/* Paid Fee Status */
+td.status.paid {
+    color: #28a745; /* Green for Paid */
+}
+
+/* Pending Fee Status */
+td.status.pending {
+    color: #dc3545; /* Red for Pending */
 }
