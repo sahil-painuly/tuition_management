@@ -57,50 +57,39 @@ const updateStats = () => {
     document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
-const renderStudents = (month) => {
+// Render Students (Filter by month)
+const renderStudents = (month, isFilterApplied = false) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
-    // Filter students whose 'nextFeeDate' month matches the selected month
+    // Filter students by selected month
     const filteredStudents = students.filter(student => {
         const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
         return studentMonth === parseInt(month); // Match the month
     });
 
+    // If filter is applied, show success alert
+    if (isFilterApplied) {
+        alert("Filter applied successfully!");
+    }
+
     filteredStudents.forEach((student) => {
         const row = document.createElement("tr");
 
-        const nameCell = document.createElement("td");
-        nameCell.textContent = student.name;
-        row.appendChild(nameCell);
-
-        const classCell = document.createElement("td");
-        classCell.textContent = student.class || "N/A"; // Default to "N/A" if class is undefined
-        row.appendChild(classCell);
-
-        const feeDateCell = document.createElement("td");
-        feeDateCell.textContent = new Date(student.nextFeeDate).toLocaleDateString();
-        row.appendChild(feeDateCell);
-
-        const statusCell = document.createElement("td");
-        statusCell.textContent = student.feeStatus;
-        row.appendChild(statusCell);
-
-        const feeAmountCell = document.createElement("td");
-        feeAmountCell.textContent = `₹${student.feeAmount}`;
-        row.appendChild(feeAmountCell);
-
-        const actionCell = document.createElement("td");
-        const toggleBtn = document.createElement("button");
-        toggleBtn.textContent = student.feeStatus === "Paid" ? "Unmark Paid" : "Mark Paid";
-        toggleBtn.classList.add("btn", student.feeStatus === "Paid" ? "btn-danger" : "btn-success");
-
-        toggleBtn.addEventListener("click", () => {
-            markFeePaid(student._id);  // Directly call the markFeePaid function with the student ID
-        });
-
-        actionCell.appendChild(toggleBtn);
-        row.appendChild(actionCell);
+        row.innerHTML = `
+            <td>${student.name}</td>
+            <td>${student.class || "N/A"}</td>
+            <td>${new Date(student.nextFeeDate).toLocaleDateString()}</td>
+            <td>${student.feeStatus}</td>
+            <td>₹${student.feeAmount}</td>
+            <td>
+                <button class="btn btn-custom ${
+                    student.feeStatus === "Paid" ? "btn-danger" : "btn-success"
+                }" onclick="markFeePaid('${student._id}')">
+                    ${student.feeStatus === "Paid" ? "Unmark Paid" : "Mark Paid"}
+                </button>
+            </td>
+        `;
 
         studentRecords.appendChild(row);
     });
@@ -128,10 +117,10 @@ const addStudent = async () => {
         if (!response.ok) throw new Error("Failed to add student");
 
         const newStudent = await response.json();
-        students.push(newStudent); // Update the local students array
+        students.push(newStudent);
         alert("Student added successfully!");
-        updateStats(); // Update stats and re-render table
-        renderStudents(currentMonth);
+        updateStats();
+        renderStudents(currentMonth); // Render updated data
     } catch (error) {
         console.error("Error adding student:", error);
         alert("Failed to add student. Please try again.");
@@ -140,28 +129,22 @@ const addStudent = async () => {
 
 // Mark Fee as Paid
 const markFeePaid = async (studentId) => {
-    const student = students.find(student => student._id === studentId); // Get the student by ID
-    const newFeeStatus = student.feeStatus === "Paid" ? "Pending" : "Paid"; // Toggle the status
+    const student = students.find(student => student._id === studentId);
+    const newFeeStatus = student.feeStatus === "Paid" ? "Pending" : "Paid";
 
     try {
         const response = await fetch(`${API_BASE_URL}/update-status`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                id: studentId,
-                feeStatus: newFeeStatus,
-            }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: studentId, feeStatus: newFeeStatus }),
         });
 
         const data = await response.json();
         if (data.success) {
             alert(`Fee status updated to ${newFeeStatus} successfully!`);
-            // Refresh the student data and re-render
-            students = await fetchData("students");
+            students = await fetchData("students"); // Refresh data
             updateStats();
-            renderStudents(currentMonth);  // Ensure updated student list
+            renderStudents(currentMonth); // Render updated data
         } else {
             alert("Error updating fee status: " + data.message);
         }
@@ -171,7 +154,7 @@ const markFeePaid = async (studentId) => {
     }
 };
 
-// Populate Month Dropdown
+// Populate Month Dropdown and Handle Filter Change
 const populateMonthDropdown = () => {
     const monthSelect = document.getElementById("month-select");
     months.forEach((month) => {
@@ -184,50 +167,42 @@ const populateMonthDropdown = () => {
 
     monthSelect.addEventListener("change", async (e) => {
         const selectedMonth = e.target.value;
-        await updateStatsForMonth(selectedMonth); // Update stats
-        renderStudents(selectedMonth); // Render students for the selected month
+        await updateStatsForMonth(selectedMonth); // Update stats for selected month
+        renderStudents(selectedMonth, true); // Render filtered students
     });
 };
 
-// Function to update stats based on selected month
-const updateStatsForMonth = async (month) => {
-    // Filter students by month
+// Update Stats for Filtered Month
+const updateStatsForMonth = (month) => {
     const filteredStudents = students.filter(student => {
-        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // Get the month (1-based)
-        return studentMonth === parseInt(month); // Match the month
+        const studentMonth = new Date(student.nextFeeDate).getMonth() + 1;
+        return studentMonth === parseInt(month);
     });
 
-    // Update stats
-    const totalStudents = filteredStudents.length;
-    const feesCollected = filteredStudents
-        .filter((student) => student.feeStatus === "Paid")
+    stats.totalStudents = filteredStudents.length;
+    stats.feesCollected = filteredStudents
+        .filter(student => student.feeStatus === "Paid")
         .reduce((sum, student) => sum + student.feeAmount, 0);
-    const pendingFees = filteredStudents
-        .filter((student) => student.feeStatus === "Pending")
+    stats.pendingFees = filteredStudents
+        .filter(student => student.feeStatus === "Pending")
         .reduce((sum, student) => sum + student.feeAmount, 0);
 
-    document.getElementById("total-students").textContent = totalStudents;
-    document.getElementById("fees-collected").textContent = `₹${feesCollected}`;
-    document.getElementById("pending-fees").textContent = `₹${pendingFees}`;
+    document.getElementById("total-students").textContent = stats.totalStudents;
+    document.getElementById("fees-collected").textContent = `₹${stats.feesCollected}`;
+    document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
 // Initialize Dashboard
 const initDashboard = async () => {
     if (!verifyPassword()) return;
 
-    populateMonthDropdown();
+    populateMonthDropdown(); // Populate month dropdown
 
-    // Fetch and display student data
     students = await fetchData("students");
-    updateStats();
-    renderStudents(currentMonth);
+    updateStats(); // Update overall stats
+    renderStudents(currentMonth); // Render students for current month
 
-    // Attach Event Listeners
-    document.getElementById("add-new-student-btn").addEventListener("click", addStudent);
-    document.getElementById("logout-btn").addEventListener("click", () => {
-        alert("Logging out...");
-        window.location.href = "index.html";
-    });
+    document.getElementById("add-new-student-btn").addEventListener("click", addStudent); // Add new student functionality
 };
 
 // Start the Dashboard
