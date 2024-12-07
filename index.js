@@ -47,7 +47,8 @@ app.get('/api/students', async (req, res) => {
     // If month is provided, filter by nextFeeDate
     if (month) {
       const startDate = new Date(`${new Date().getFullYear()}-${month}-01`);
-      const endDate = new Date(`${new Date().getFullYear()}-${parseInt(month) + 1}-01`);
+      const endDate = new Date(startDate);
+      endDate.setMonth(startDate.getMonth() + 1);  // Set to the first day of the next month
       query.nextFeeDate = { $gte: startDate, $lt: endDate }; // Filter by month range
     }
 
@@ -114,16 +115,17 @@ app.post('/api/update-status', async (req, res) => {
 // Filter students by next fee month (Optional if needed for specific backend filtering)
 app.get('/api/students-by-month', async (req, res) => {
   const { month } = req.query; // Expects month in "MM" format
-  if (!month) {
-    return res.status(400).json({ success: false, message: 'Month is required' });
+  if (!month || !/^\d{2}$/.test(month)) {
+    return res.status(400).json({ success: false, message: 'Valid month (MM) is required' });
   }
 
   try {
+    const startDate = new Date(`${new Date().getFullYear()}-${month}-01`);
+    const endDate = new Date(startDate);
+    endDate.setMonth(startDate.getMonth() + 1);  // Set to the first day of the next month
+
     const students = await Student.find({
-      nextFeeDate: {
-        $gte: new Date(`${new Date().getFullYear()}-${month}-01`),
-        $lt: new Date(`${new Date().getFullYear()}-${month}-31`),
-      },
+      nextFeeDate: { $gte: startDate, $lt: endDate },
     });
     res.json(students);
   } catch (err) {
