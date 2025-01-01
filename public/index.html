@@ -66,22 +66,23 @@
                     <!-- Date Range Section -->
                     <div class="mb-3">
                         <label for="start-date" class="form-label text-success">Start Date:</label>
-                        <input type="date" class="form-control border-success" id="start-date" value="${new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0]}">
+                        <input type="date" class="form-control border-success" id="start-date">
                     </div>
                     <div class="mb-3">
                         <label for="end-date" class="form-label text-success">End Date:</label>
-                        <input type="date" class="form-control border-success" id="end-date" value="${new Date().toISOString().split('T')[0]}">
+                        <input type="date" class="form-control border-success" id="end-date">
                     </div>
 
                     <div class="d-flex justify-content-end">
                         <button class="btn btn-custom" id="apply-filter-btn"><i class="fas fa-filter"></i> Apply Filters</button>
                     </div>
 
-                    <button type="submit" class="btn btn-success w-100">Add Student</button>
+                    <button class="btn btn-success w-100 mt-3" data-bs-toggle="modal" data-bs-target="#addStudentModal">Add Student</button>
 
                     <!-- Table Section -->
                     <div class="table-responsive mt-4">
                         <table class="table table-bordered table-hover text-center">
+                            <caption class="text-success">Student Fee Records</caption>
                             <thead class="bg-success text-white">
                                 <tr>
                                     <th>Name</th>
@@ -101,9 +102,49 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Student Modal -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-success" id="addStudentModalLabel">Add New Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addStudentForm">
+                        <div class="mb-3">
+                            <label for="studentName" class="form-label">Student Name:</label>
+                            <input type="text" class="form-control" id="studentName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="studentClass" class="form-label">Class:</label>
+                            <input type="text" class="form-control" id="studentClass" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="feeAmount" class="form-label">Fee Amount:</label>
+                            <input type="number" class="form-control" id="feeAmount" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nextFeeDate" class="form-label">Next Fee Date:</label>
+                            <input type="date" class="form-control" id="nextFeeDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="batch" class="form-label">Batch:</label>
+                            <input type="text" class="form-control" id="batch" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="text-center py-3 bg-light mt-5 border-top">
         <p class="mb-0 text-success">© 2024 Tuition Management | All Rights Reserved</p>
     </footer>
+
     <script src="admin-dashboard.js"></script>
 </body>
 </html>
+
