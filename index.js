@@ -62,19 +62,27 @@ app.get('/api/students', async (req, res) => {
 
 // Add a new student
 app.post('/api/add-student', async (req, res) => {
-  const { name, studentClass, nextFeeDate, feeAmount } = req.body;
-  if (!name || !studentClass || !nextFeeDate || !feeAmount) {
-    return res.status(400).json({ success: false, message: 'All fields are required' });
+  const { name, studentClass, nextFeeDate, feeAmount, batch } = req.body;
+
+  // Validate input
+  if (!name || !studentClass || !nextFeeDate || !feeAmount || !batch) {
+    return res.status(400).json({ success: false, message: 'All fields are required, including batch.' });
   }
 
   try {
+    // Create a new student document
     const newStudent = new Student({
       name,
       class: studentClass,
       nextFeeDate: new Date(nextFeeDate),
       feeAmount,
+      batch, // Add batch field
     });
+
+    // Save the student to the database
     await newStudent.save();
+
+    // Respond with the newly created student
     res.status(201).json({ success: true, student: newStudent });
   } catch (err) {
     console.error('Error adding student:', err);
