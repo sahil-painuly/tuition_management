@@ -3,18 +3,21 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const path = require('path');
+require('dotenv').config();
+
 const app = express();
 
 // Enable CORS and JSON Parsing
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB connection string
-const mongoURI = 'mongodb+srv://shlpainuly:0TTJx8Z3jQXhNqxQ@tuition.4yy9m.mongodb.net/tuition_management?retryWrites=true&w=majority&appName=tuition';
+// MongoDB connection string from environment variables
+const mongoURI = process.env.MONGO_URI || 'your-default-mongodb-uri';
 
-mongoose.connect(mongoURI)
+mongoose
+  .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB Atlas'))
-  .catch(err => console.error('Could not connect to MongoDB...', err));
+  .catch((err) => console.error('Could not connect to MongoDB...', err));
 
 // Serve static files for frontend
 app.use(express.static(path.join(__dirname, 'public')));
@@ -31,6 +34,7 @@ const studentSchema = new mongoose.Schema({
   nextFeeDate: { type: Date, required: true },
   feeStatus: { type: String, enum: ['Pending', 'Paid'], default: 'Pending' },
   feeAmount: { type: Number, required: true },
+  batch: { type: String, required: true }, // Batch added
 });
 
 const Student = mongoose.model('Student', studentSchema);
@@ -39,24 +43,23 @@ const Student = mongoose.model('Student', studentSchema);
 
 // Get all students with optional month filtering
 app.get('/api/students', async (req, res) => {
-  const { month } = req.query; // Get month from query parameters
+  const { month } = req.query;
 
   try {
     let query = {};
 
-    // If month is provided, filter by nextFeeDate
     if (month) {
       const startDate = new Date(`${new Date().getFullYear()}-${month}-01`);
       const endDate = new Date(startDate);
-      endDate.setMonth(startDate.getMonth() + 1);  // Set to the first day of the next month
-      query.nextFeeDate = { $gte: startDate, $lt: endDate }; // Filter by month range
+      endDate.setMonth(startDate.getMonth() + 1);
+      query.nextFeeDate = { $gte: startDate, $lt: endDate };
     }
 
     const students = await Student.find(query);
     res.json(students);
   } catch (err) {
     console.error('Error retrieving students:', err);
-    res.status(500).json({ message: 'Error retrieving students' });
+    res.status(500).json({ success: false, message: 'Error retrieving students' });
   }
 });
 
@@ -64,25 +67,22 @@ app.get('/api/students', async (req, res) => {
 app.post('/api/add-student', async (req, res) => {
   const { name, studentClass, nextFeeDate, feeAmount, batch } = req.body;
 
-  // Validate input
   if (!name || !studentClass || !nextFeeDate || !feeAmount || !batch) {
-    return res.status(400).json({ success: false, message: 'All fields are required, including batch.' });
+    return res
+      .status(400)
+      .json({ success: false, message: 'All fields are required, including batch.' });
   }
 
   try {
-    // Create a new student document
     const newStudent = new Student({
       name,
       class: studentClass,
       nextFeeDate: new Date(nextFeeDate),
       feeAmount,
-      batch, // Add batch field
+      batch,
     });
 
-    // Save the student to the database
     await newStudent.save();
-
-    // Respond with the newly created student
     res.status(201).json({ success: true, student: newStudent });
   } catch (err) {
     console.error('Error adding student:', err);
@@ -94,25 +94,23 @@ app.post('/api/add-student', async (req, res) => {
 app.post('/api/update-status', async (req, res) => {
   const { id, feeStatus } = req.body;
 
-  // Validate inputs
-  if (!id || !feeStatus) {
-    return res.status(400).json({ success: false, message: 'Student ID and fee status are required' });
+  if (!id || !['Pending', 'Paid'].includes(feeStatus)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Valid student ID and fee status are required' });
   }
 
   try {
-    // Use findOneAndUpdate to directly update the student's feeStatus
     const updatedStudent = await Student.findOneAndUpdate(
-      { _id: id },  // Find student by ID
-      { feeStatus: feeStatus },  // Update feeStatus
-      { new: true }  // Return the updated document
+      { _id: id },
+      { feeStatus },
+      { new: true }
     );
 
-    // If student not found, return 404
     if (!updatedStudent) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    // Return success with the updated student
     res.json({ success: true, student: updatedStudent });
   } catch (err) {
     console.error('Error updating fee status:', err);
@@ -120,9 +118,10 @@ app.post('/api/update-status', async (req, res) => {
   }
 });
 
-// Filter students by next fee month (Optional if needed for specific backend filtering)
+// Filter students by next fee month
 app.get('/api/students-by-month', async (req, res) => {
-  const { month } = req.query; // Expects month in "MM" format
+  const { month } = req.query;
+
   if (!month || !/^\d{2}$/.test(month)) {
     return res.status(400).json({ success: false, message: 'Valid month (MM) is required' });
   }
@@ -130,7 +129,7 @@ app.get('/api/students-by-month', async (req, res) => {
   try {
     const startDate = new Date(`${new Date().getFullYear()}-${month}-01`);
     const endDate = new Date(startDate);
-    endDate.setMonth(startDate.getMonth() + 1);  // Set to the first day of the next month
+    endDate.setMonth(startDate.getMonth() + 1);
 
     const students = await Student.find({
       nextFeeDate: { $gte: startDate, $lt: endDate },
@@ -138,13 +137,13 @@ app.get('/api/students-by-month', async (req, res) => {
     res.json(students);
   } catch (err) {
     console.error('Error filtering students by month:', err);
-    res.status(500).json({ message: 'Error filtering students by month' });
+    res.status(500).json({ success: false, message: 'Error filtering students by month' });
   }
 });
 
 // Handle unknown API routes
 app.use((req, res) => {
-  res.status(404).json({ message: 'API route not found' });
+  res.status(404).json({ success: false, message: 'API route not found' });
 });
 
 // Start the server
