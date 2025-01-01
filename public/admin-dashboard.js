@@ -47,10 +47,10 @@ const fetchData = async (endpoint) => {
 const updateStats = () => {
     stats.totalStudents = students.length;
     stats.feesCollected = students
-        .filter((student) => student.feeStatus === "Paid")
+        .filter(student => student.feeStatus === "Paid")
         .reduce((sum, student) => sum + student.feeAmount, 0);
     stats.pendingFees = students
-        .filter((student) => student.feeStatus === "Pending")
+        .filter(student => student.feeStatus === "Pending")
         .reduce((sum, student) => sum + student.feeAmount, 0);
 
     document.getElementById("total-students").textContent = stats.totalStudents;
@@ -58,26 +58,20 @@ const updateStats = () => {
     document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
-// Render Students (Filter by batch, status, and date range)
+// Render Students
 const renderStudents = (batch, status, month, startDate, endDate) => {
     const studentRecords = document.getElementById("student-records");
-    studentRecords.innerHTML = ""; // Clear previous records
-
-    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); // 1st day of current month
-    const currentDay = currentDate.getDate(); // Current day of the month
+    studentRecords.innerHTML = "";
 
     const filteredStudents = students.filter(student => {
-        const studentMonth = new Date(student.nextFeeDate).getMonth(); // Get the month (0-based)
-        const studentDay = new Date(student.nextFeeDate).getDate(); // Get the day (1-based)
         const feeDate = new Date(student.nextFeeDate);
-        
-        // Check if the date is in the range (start date to end date)
-        const isInDateRange = (startDate && feeDate >= new Date(startDate)) && (endDate && feeDate <= new Date(endDate));
+        const studentMonth = feeDate.getMonth() + 1;
 
-        // Other filters
+        const isInDateRange = (!startDate || feeDate >= new Date(startDate)) &&
+                              (!endDate || feeDate <= new Date(endDate));
         const isMatchingBatch = batch ? student.batch === batch : true;
         const isMatchingStatus = status ? student.feeStatus === status : true;
-        const isMatchingMonth = month ? studentMonth + 1 === parseInt(month) : true;
+        const isMatchingMonth = month ? studentMonth === parseInt(month) : true;
 
         return isInDateRange && isMatchingBatch && isMatchingStatus && isMatchingMonth;
     });
@@ -87,7 +81,7 @@ const renderStudents = (batch, status, month, startDate, endDate) => {
         return;
     }
 
-    filteredStudents.forEach((student) => {
+    filteredStudents.forEach(student => {
         const row = document.createElement("tr");
         row.innerHTML = `
             <td>${student.name}</td>
@@ -119,9 +113,9 @@ const markFeePaid = async (studentId) => {
 
         const data = await response.json();
         if (data.success) {
-            student.feeStatus = newFeeStatus;  // Update local student status
+            student.feeStatus = newFeeStatus;
             alert(`Fee status updated to ${newFeeStatus} successfully!`);
-            renderStudents();  // Re-render students after update
+            renderStudents(); // Re-render students
         } else {
             alert("Failed to update fee status.");
         }
@@ -131,10 +125,10 @@ const markFeePaid = async (studentId) => {
     }
 };
 
-// Populate Batch Filter
+// Populate Filters
 const populateBatchFilter = () => {
     const batchButtonsContainer = document.getElementById("batch-buttons-container");
-    const batches = ["1", "2", "3"]; // Assuming batches are 1, 2, 3
+    const batches = ["1", "2", "3"];
     batches.forEach(batch => {
         const button = document.createElement("button");
         button.classList.add("batch-btn", "btn", "btn-outline-success");
@@ -151,7 +145,6 @@ const populateBatchFilter = () => {
     });
 };
 
-// Populate Month Filter
 const populateMonthFilter = () => {
     const monthSelect = document.getElementById("month-select");
     months.forEach(month => {
@@ -163,7 +156,6 @@ const populateMonthFilter = () => {
     monthSelect.value = currentMonth.toString().padStart(2, "0");
 };
 
-// Setup Filters and Apply Button
 const setupFilters = () => {
     document.getElementById("apply-filter-btn").addEventListener("click", () => {
         const batch = document.querySelector(".batch-btn.active")?.value || null;
@@ -175,7 +167,7 @@ const setupFilters = () => {
     });
 };
 
-// Initial Setup and Fetch Data
+// Initialize Dashboard
 const initializeDashboard = async () => {
     if (!verifyPassword()) return;
     students = await fetchData("students");
@@ -186,5 +178,5 @@ const initializeDashboard = async () => {
     setupFilters();
 };
 
-// Initialize Dashboard on Load
+// Initialize on Load
 initializeDashboard();
