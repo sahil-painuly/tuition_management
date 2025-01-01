@@ -44,12 +44,19 @@ const fetchData = async (endpoint) => {
 };
 
 // Update Stats
-const updateStats = () => {
-    stats.totalStudents = students.length;
-    stats.feesCollected = students
+const updateStats = (selectedMonth = null) => {
+    const filteredStudents = selectedMonth
+        ? students.filter(student => {
+            const studentMonth = new Date(student.nextFeeDate).getMonth() + 1; // 1-based month
+            return studentMonth === parseInt(selectedMonth);
+        })
+        : students;
+
+    stats.totalStudents = filteredStudents.length;
+    stats.feesCollected = filteredStudents
         .filter((student) => student.feeStatus === "Paid")
         .reduce((sum, student) => sum + student.feeAmount, 0);
-    stats.pendingFees = students
+    stats.pendingFees = filteredStudents
         .filter((student) => student.feeStatus === "Pending")
         .reduce((sum, student) => sum + student.feeAmount, 0);
 
@@ -160,7 +167,16 @@ const populateMonthFilter = () => {
         option.textContent = month.name;
         monthSelect.appendChild(option);
     });
+
+    // Set the default value to the current month
     monthSelect.value = currentMonth.toString().padStart(2, "0");
+
+    // Add event listener to update stats dynamically on month change
+    monthSelect.addEventListener("change", (event) => {
+        const selectedMonth = event.target.value;
+        updateStats(selectedMonth);
+        renderStudents(null, null, selectedMonth); // Re-render students for the selected month
+    });
 };
 
 // Setup Filters and Apply Button
@@ -179,10 +195,10 @@ const setupFilters = () => {
 const initializeDashboard = async () => {
     if (!verifyPassword()) return;
     students = await fetchData("students");
-    updateStats();
+    updateStats(currentMonth); // Initial stats for the current month
     populateMonthFilter();
     populateBatchFilter();
-    renderStudents();
+    renderStudents(null, null, currentMonth); // Initial render for the current month
     setupFilters();
 };
 
