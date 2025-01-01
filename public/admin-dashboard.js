@@ -54,10 +54,10 @@ const updateStats = (selectedMonth = null) => {
 
     stats.totalStudents = filteredStudents.length;
     stats.feesCollected = filteredStudents
-        .filter((student) => student.feeStatus === "Paid")
+        .filter(student => student.feeStatus === "Paid")
         .reduce((sum, student) => sum + student.feeAmount, 0);
     stats.pendingFees = filteredStudents
-        .filter((student) => student.feeStatus === "Pending")
+        .filter(student => student.feeStatus === "Pending")
         .reduce((sum, student) => sum + student.feeAmount, 0);
 
     document.getElementById("total-students").textContent = stats.totalStudents;
@@ -65,8 +65,8 @@ const updateStats = (selectedMonth = null) => {
     document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
-
-document.getElementById("addStudentForm").addEventListener("submit", async (event) => {
+// Add a New Student
+const addStudent = async (event) => {
     event.preventDefault();
 
     const studentData = {
@@ -78,18 +78,15 @@ document.getElementById("addStudentForm").addEventListener("submit", async (even
     };
 
     try {
-        // Send the data to the backend
-        const response = await fetch("/add-student", {
+        const response = await fetch(`${API_BASE_URL}/add-student`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(studentData),
         });
 
         if (response.ok) {
             alert("Student added successfully!");
-            // Optionally refresh stats and table
+            students = await fetchData("students"); // Refresh data
             updateStats();
             renderStudents();
         } else {
@@ -101,32 +98,25 @@ document.getElementById("addStudentForm").addEventListener("submit", async (even
         alert("Failed to add student. Please try again later.");
     }
 
-    // Reset the form and close the modal
     document.getElementById("addStudentForm").reset();
     const addStudentModal = bootstrap.Modal.getInstance(document.getElementById("addStudentModal"));
     addStudentModal.hide();
-});
+};
 
 // Render Students (Filter by batch, status, and date range)
-const renderStudents = (batch, status, month, startDate, endDate) => {
+const renderStudents = (batch = null, status = null, month = null, startDate = null, endDate = null) => {
     const studentRecords = document.getElementById("student-records");
     studentRecords.innerHTML = ""; // Clear previous records
 
-    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); // 1st day of current month
-    const currentDay = currentDate.getDate(); // Current day of the month
-
     const filteredStudents = students.filter(student => {
-        const studentMonth = new Date(student.nextFeeDate).getMonth(); // Get the month (0-based)
-        const studentDay = new Date(student.nextFeeDate).getDate(); // Get the day (1-based)
         const feeDate = new Date(student.nextFeeDate);
-        
-        // Check if the date is in the range (start date to end date)
-        const isInDateRange = (startDate && feeDate >= new Date(startDate)) && (endDate && feeDate <= new Date(endDate));
+        const studentMonth = feeDate.getMonth() + 1; // 1-based month
 
-        // Other filters
+        const isInDateRange = (!startDate || feeDate >= new Date(startDate)) &&
+                              (!endDate || feeDate <= new Date(endDate));
         const isMatchingBatch = batch ? student.batch === batch : true;
         const isMatchingStatus = status ? student.feeStatus === status : true;
-        const isMatchingMonth = month ? studentMonth + 1 === parseInt(month) : true;
+        const isMatchingMonth = month ? studentMonth === parseInt(month) : true;
 
         return isInDateRange && isMatchingBatch && isMatchingStatus && isMatchingMonth;
     });
@@ -136,7 +126,7 @@ const renderStudents = (batch, status, month, startDate, endDate) => {
         return;
     }
 
-    filteredStudents.forEach((student) => {
+    filteredStudents.forEach(student => {
         const row = document.createElement("tr");
         row.innerHTML = `
             <td>${student.name}</td>
@@ -145,7 +135,8 @@ const renderStudents = (batch, status, month, startDate, endDate) => {
             <td>${student.feeStatus}</td>
             <td>₹${student.feeAmount}</td>
             <td>
-                <button class="btn btn-custom ${student.feeStatus === "Paid" ? "btn-danger" : "btn-success"}" onclick="markFeePaid('${student._id}')">
+                <button class="btn btn-custom ${student.feeStatus === "Paid" ? "btn-danger" : "btn-success"}"
+                        onclick="markFeePaid('${student._id}')">
                     ${student.feeStatus === "Paid" ? "Unmark Paid" : "Mark Paid"}
                 </button>
             </td>
@@ -168,9 +159,9 @@ const markFeePaid = async (studentId) => {
 
         const data = await response.json();
         if (data.success) {
-            student.feeStatus = newFeeStatus;  // Update local student status
+            student.feeStatus = newFeeStatus;
             alert(`Fee status updated to ${newFeeStatus} successfully!`);
-            renderStudents();  // Re-render students after update
+            renderStudents();
         } else {
             alert("Failed to update fee status.");
         }
@@ -180,69 +171,13 @@ const markFeePaid = async (studentId) => {
     }
 };
 
-// Populate Batch Filter
-const populateBatchFilter = () => {
-    const batchButtonsContainer = document.getElementById("batch-buttons-container");
-    const batches = ["1", "2", "3"]; // Assuming batches are 1, 2, 3
-    batches.forEach(batch => {
-        const button = document.createElement("button");
-        button.classList.add("batch-btn", "btn", "btn-outline-success");
-        button.textContent = `Batch ${batch}`;
-        button.value = batch;
-        button.onclick = () => {
-            const status = document.querySelector(".status-btn:checked")?.value || null;
-            const month = document.getElementById("month-select").value;
-            const startDate = document.getElementById("start-date").value;
-            const endDate = document.getElementById("end-date").value;
-            renderStudents(batch, status, month, startDate, endDate);
-        };
-        batchButtonsContainer.appendChild(button);
-    });
-};
-
-// Populate Month Filter
-const populateMonthFilter = () => {
-    const monthSelect = document.getElementById("month-select");
-    months.forEach(month => {
-        const option = document.createElement("option");
-        option.value = month.value;
-        option.textContent = month.name;
-        monthSelect.appendChild(option);
-    });
-
-    // Set the default value to the current month
-    monthSelect.value = currentMonth.toString().padStart(2, "0");
-
-    // Add event listener to update stats dynamically on month change
-    monthSelect.addEventListener("change", (event) => {
-        const selectedMonth = event.target.value;
-        updateStats(selectedMonth);
-        renderStudents(null, null, selectedMonth); // Re-render students for the selected month
-    });
-};
-
-// Setup Filters and Apply Button
-const setupFilters = () => {
-    document.getElementById("apply-filter-btn").addEventListener("click", () => {
-        const batch = document.querySelector(".batch-btn.active")?.value || null;
-        const status = document.querySelector(".status-btn:checked")?.value || null;
-        const month = document.getElementById("month-select").value;
-        const startDate = document.getElementById("start-date").value;
-        const endDate = document.getElementById("end-date").value;
-        renderStudents(batch, status, month, startDate, endDate);
-    });
-};
-
-// Initial Setup and Fetch Data
+// Initialize Dashboard
 const initializeDashboard = async () => {
     if (!verifyPassword()) return;
+
     students = await fetchData("students");
-    updateStats(currentMonth); // Initial stats for the current month
-    populateMonthFilter();
-    populateBatchFilter();
+    updateStats(currentMonth);
     renderStudents(null, null, currentMonth); // Initial render for the current month
-    setupFilters();
 };
 
-// Initialize Dashboard on Load
 initializeDashboard();
