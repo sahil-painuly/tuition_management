@@ -65,6 +65,48 @@ const updateStats = (selectedMonth = null) => {
     document.getElementById("pending-fees").textContent = `₹${stats.pendingFees}`;
 };
 
+
+document.getElementById("addStudentForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const studentData = {
+        name: document.getElementById("studentName").value.trim(),
+        class: document.getElementById("studentClass").value.trim(),
+        feeAmount: parseInt(document.getElementById("feeAmount").value),
+        nextFeeDate: document.getElementById("nextFeeDate").value,
+        batch: document.getElementById("batch").value.trim(),
+    };
+
+    try {
+        // Send the data to the backend
+        const response = await fetch("/add-student", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(studentData),
+        });
+
+        if (response.ok) {
+            alert("Student added successfully!");
+            // Optionally refresh stats and table
+            updateStats();
+            renderStudents();
+        } else {
+            const error = await response.json();
+            alert(`Error: ${error.message}`);
+        }
+    } catch (err) {
+        console.error("Error adding student:", err);
+        alert("Failed to add student. Please try again later.");
+    }
+
+    // Reset the form and close the modal
+    document.getElementById("addStudentForm").reset();
+    const addStudentModal = bootstrap.Modal.getInstance(document.getElementById("addStudentModal"));
+    addStudentModal.hide();
+});
+
 // Render Students (Filter by batch, status, and date range)
 const renderStudents = (batch, status, month, startDate, endDate) => {
     const studentRecords = document.getElementById("student-records");
